@@ -1,50 +1,117 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import PostcardStack from "@/src/components/PostcardStack";
+import AnimatedPostcardStack from "@/src/components/AnimatedPostcardStack";
+import NextButton from "@/src/components/NextButton";
+import BackButton from "@/src/components/BackButton";
+import {
+  PostcardData,
+  POSTCARD_CONFIG,
+  DEFAULT_BACKGROUND_CARDS,
+} from "../types";
+
+const postcardData: PostcardData[] = [
+  {
+    background: "linear-gradient(135deg, #667eea, #764ba2)",
+    contentHtml: (
+      <div className="space-y-6">
+        <h2 className="text-4xl font-bold text-white">Your ChatGPT Rewind</h2>
+        <p className="text-2xl text-white">
+          <strong>
+            Relive your most memorable conversations with ChatGPT in a
+            personalized recap. <br /> Click the Next button to start!
+          </strong>
+        </p>
+      </div>
+    ),
+  },
+  {
+    background: "linear-gradient(135deg, #f6d365, #fda085)",
+    contentHtml: (
+      <div className="space-y-6">
+        <h2 className="text-4xl font-bold text-gray-900">
+          Your topics over time
+        </h2>
+        <div className="text-gray-800">
+          <p className="text-xl mb-4">
+            Your interests have evolved significantly!
+          </p>
+          <ul className="list-disc list-inside text-left space-y-2 text-lg">
+            <li>2022: Travel and Adventure</li>
+            <li>2023: Technology and AI</li>
+            <li>2024: Personal Development</li>
+            <li>(insert chart here)</li>
+          </ul>
+        </div>
+      </div>
+    ),
+  },
+];
 
 export default function Home() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleNext = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % postcardData.length);
+      setIsAnimating(false);
+    }, POSTCARD_CONFIG.animationDuration);
+  };
+
+  const handleBack = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentIndex(
+        (prev) => (prev - 1 + postcardData.length) % postcardData.length
+      );
+      setIsAnimating(false);
+    }, POSTCARD_CONFIG.animationDuration);
+  };
+
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-amber-100 via-orange-50 to-amber-50">
-      {/* Abstract table texture - wood grain effect */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="h-full w-full bg-gradient-to-b from-amber-200/50 via-transparent to-amber-300/30"></div>
-        <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_2px,rgba(180,83,9,0.03)_2px,rgba(180,83,9,0.03)_4px)]"></div>
+    <div
+      className="relative overflow-hidden bg-linear-to-br from-gray-950 via-gray-900 to-black"
+      style={{ minHeight: "calc(100vh - 64px)" }}
+    >
+      {/* Abstract table texture - dark effect */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="h-full w-full bg-linear-to-b from-gray-800/30 via-transparent to-gray-950/30"></div>
+        <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_2px,rgba(0,0,0,0.1)_2px,rgba(0,0,0,0.1)_4px)]"></div>
       </div>
 
-      <main className="relative flex min-h-screen items-center justify-center p-8">
-        {/* Stack of notepapers */}
-        <div className="relative">
-          {/* Bottom notepaper - rotated slightly */}
-          <div className="absolute -bottom-4 -right-4 h-96 w-80 rounded-lg bg-gradient-to-br from-yellow-100 to-yellow-200 shadow-xl rotate-3 opacity-70"></div>
+      <main
+        className="relative flex items-center justify-center p-8"
+        style={{ minHeight: "calc(100vh - 64px)" }}
+      >
+        {/* Stack of postcards - all positioned absolutely and centered */}
+        <PostcardStack
+          postcards={DEFAULT_BACKGROUND_CARDS}
+          width={1280}
+          height={720}
+          background="#304158ff"
+        />
 
-          {/* Middle notepaper - rotated opposite */}
-          <div className="absolute -bottom-2 -left-3 h-96 w-80 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 shadow-xl -rotate-2 opacity-80"></div>
+        {/* Animated postcard stack with current and next */}
+        <AnimatedPostcardStack
+          postcards={postcardData}
+          currentIndex={currentIndex}
+          isAnimating={isAnimating}
+          width={1280}
+          height={720}
+          baseZIndex={DEFAULT_BACKGROUND_CARDS.length}
+        />
 
-          {/* Top notepaper - main card */}
-          <div className="relative h-96 w-80 rounded-lg bg-gradient-to-br from-pink-50 to-rose-100 shadow-2xl transform transition-transform hover:scale-105">
-            {/* Content area */}
-            <div className="relative p-8 h-full flex flex-col justify-center items-center text-center">
-              <div className="space-y-4">
-                <h2 className="text-3xl font-bold text-gray-800">
-                  Postcard Title
-                </h2>
-                <p className="text-gray-600">Your content goes here</p>
-                <div className="pt-4">
-                  <div className="h-32 w-full rounded-md bg-white/50 backdrop-blur-sm flex items-center justify-center text-gray-400">
-                    Content Block
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Corner fold effect */}
-            <div className="absolute top-0 right-0 w-12 h-12 overflow-hidden">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 rotate-45 translate-x-8 -translate-y-8 shadow-inner"></div>
-            </div>
-          </div>
-
-          {/* Additional scattered notepapers for depth */}
-          <div className="absolute -top-8 -right-12 h-32 w-40 rounded-md bg-gradient-to-br from-green-100 to-emerald-200 shadow-lg rotate-12 opacity-60"></div>
-          <div className="absolute -bottom-6 right-8 h-24 w-32 rounded-md bg-gradient-to-br from-purple-100 to-violet-200 shadow-lg -rotate-6 opacity-50"></div>
-        </div>
+        {/* Navigation buttons */}
+        <BackButton
+          onClick={handleBack}
+          disabled={isAnimating || currentIndex === 0}
+        />
+        <NextButton onClick={handleNext} disabled={isAnimating} />
       </main>
     </div>
   );
