@@ -1,12 +1,6 @@
-export interface PostcardData {
-  background: string;
-  contentHtml?: React.ReactNode;
-}
-
 export interface PostcardProps {
   contentHtml?: React.ReactNode;
   rotation: number;
-  background: string;
   zIndex: number;
   offset: { x: number; y: number };
   width?: number;

@@ -1,4 +1,8 @@
 *.json
+!package.json
+!package-lock.json
+!tsconfig.json
+
 config.py
 /venv
 # Bytecode

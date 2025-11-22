@@ -1,52 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import PostcardStack from "@/src/components/PostcardStack";
-import AnimatedPostcardStack from "@/src/components/AnimatedPostcardStack";
-import NextButton from "@/src/components/NextButton";
-import BackButton from "@/src/components/BackButton";
-import {
-  PostcardData,
-  POSTCARD_CONFIG,
-  DEFAULT_BACKGROUND_CARDS,
-} from "../types";
+import { ReactNode, useState } from "react";
+import AnimatedPostcardStack from "@/src/components/postcard/AnimatedPostcardStack";
+import NextButton from "@/src/components/layout/NextButton";
+import BackButton from "@/src/components/layout/BackButton";
+import { POSTCARD_CONFIG, DEFAULT_BACKGROUND_CARDS } from "../types";
+import TopicsPerHourSlide from "@/src/components/slides/TopicsPerHourSlide";
+import TopTopicsThisYearSlide from "@/src/components/slides/TopTopicsThisYearSlide";
+import PostcardStack from "@/src/components/postcard/PostcardStack";
 
-const postcardData: PostcardData[] = [
-  {
-    background: "linear-gradient(135deg, #667eea, #764ba2)",
-    contentHtml: (
-      <div className="space-y-6">
-        <h2 className="text-4xl font-bold text-white">Your ChatGPT Rewind</h2>
-        <p className="text-2xl text-white">
-          <strong>
-            Relive your most memorable conversations with ChatGPT in a
-            personalized recap. <br /> Click the Next button to start!
-          </strong>
-        </p>
-      </div>
-    ),
-  },
-  {
-    background: "linear-gradient(135deg, #f6d365, #fda085)",
-    contentHtml: (
-      <div className="space-y-6">
-        <h2 className="text-4xl font-bold text-gray-900">
-          Your topics over time
-        </h2>
-        <div className="text-gray-800">
-          <p className="text-xl mb-4">
-            Your interests have evolved significantly!
-          </p>
-          <ul className="list-disc list-inside text-left space-y-2 text-lg">
-            <li>2022: Travel and Adventure</li>
-            <li>2023: Technology and AI</li>
-            <li>2024: Personal Development</li>
-            <li>(insert chart here)</li>
-          </ul>
-        </div>
-      </div>
-    ),
-  },
+const postcardData: ReactNode[] = [
+  <TopTopicsThisYearSlide />,
+  <TopicsPerHourSlide />,
+
+  <div className="w-full h-full space-y-6 bg-red-300">
+    <h2 className="text-4xl font-bold text-gray-900">Your topics over time</h2>
+    <div className="text-gray-800">
+      <p className="text-xl mb-4">Your interests have evolved significantly!</p>
+      <ul className="list-disc list-inside text-left space-y-2 text-lg">
+        <li>2022: Travel and Adventure</li>
+        <li>2023: Technology and AI</li>
+        <li>2024: Personal Development</li>
+        <li>(insert chart here)</li>
+      </ul>
+    </div>
+  </div>,
 ];
 
 export default function Home() {

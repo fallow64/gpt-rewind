@@ -1,4 +1,3 @@
-import Postcard from "./Postcard";
 import { PostcardStackItem } from "@/src/types";
 
 interface PostcardStackProps {
@@ -20,14 +19,16 @@ export default function PostcardStack({
       style={{ width: `${width}px`, height: `${height}px` }}
     >
       {postcards.map((postcard, index) => (
-        <Postcard
+        <div
           key={index}
-          background={background}
-          rotation={postcard.rotation}
-          zIndex={index}
-          offset={postcard.offset}
-          width={width}
-          height={height}
+          className="absolute rounded-lg shadow-2xl"
+          style={{
+            background: background,
+            transform: `rotate(${postcard.rotation}deg) translate(${postcard.offset.x}px, ${postcard.offset.y}px)`,
+            zIndex: index,
+            width: `${width}px`,
+            height: `${height}px`,
+          }}
         />
       ))}
     </div>
