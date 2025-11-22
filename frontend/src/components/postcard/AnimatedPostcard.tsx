@@ -1,8 +1,7 @@
 import Postcard from "./Postcard";
 
 interface AnimatedPostcardProps {
-  contentHtml?: React.ReactNode;
-  background: string;
+  content?: React.ReactNode;
   width: number;
   height: number;
   zIndex: number;
@@ -10,8 +9,7 @@ interface AnimatedPostcardProps {
 }
 
 export default function AnimatedPostcard({
-  contentHtml,
-  background,
+  content,
   width,
   height,
   zIndex,
@@ -32,8 +30,7 @@ export default function AnimatedPostcard({
       }}
     >
       <Postcard
-        contentHtml={contentHtml}
-        background={background}
+        contentHtml={content}
         rotation={0}
         zIndex={zIndex}
         offset={{ x: 0, y: 0 }}

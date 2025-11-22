@@ -1,8 +1,8 @@
+import { ReactNode } from "react";
 import AnimatedPostcard from "./AnimatedPostcard";
-import { PostcardData } from "@/src/types";
 
 interface AnimatedPostcardStackProps {
-  postcards: PostcardData[];
+  postcards: ReactNode[];
   currentIndex: number;
   isAnimating: boolean;
   width: number;
@@ -25,8 +25,7 @@ export default function AnimatedPostcardStack({
       {/* Next postcard (second in stack) */}
       <AnimatedPostcard
         key={`next-${nextIndex}`}
-        contentHtml={postcards[nextIndex].contentHtml}
-        background={postcards[nextIndex].background}
+        content={postcards[nextIndex]}
         width={width}
         height={height}
         zIndex={baseZIndex}
@@ -36,8 +35,7 @@ export default function AnimatedPostcardStack({
       {/* Current postcard (top of stack) */}
       <AnimatedPostcard
         key={`current-${currentIndex}`}
-        contentHtml={postcards[currentIndex].contentHtml}
-        background={postcards[currentIndex].background}
+        content={postcards[currentIndex]}
         width={width}
         height={height}
         zIndex={baseZIndex + 1}
