@@ -53,20 +53,6 @@ DISCORD_CLIENT_SECRET=your-discord-client-secret
 
 ## Usage
 
-### Using the LoginButton Component
-
-```tsx
-import LoginButton from "@/components/auth/LoginButton";
-
-export default function Page() {
-  return (
-    <div>
-      <LoginButton />
-    </div>
-  );
-}
-```
-
 ### Accessing the User Session
 
 ```tsx
