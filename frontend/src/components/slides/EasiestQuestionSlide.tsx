@@ -20,7 +20,7 @@ export default function EasiestQuestionSlide() {
           <h2 className="text-5xl font-bold text-white">
             Your Easiest Question
           </h2>
-          <p className="text-2xl text-white/90">We all start somewhere... 😅</p>
+          <p className="text-2xl text-white/90">We all start somewhere...</p>
         </div>
 
         {/* Question display */}
@@ -40,7 +40,7 @@ export default function EasiestQuestionSlide() {
             Hey, no judgment! Everyone asks simple questions sometimes.
           </p>
           <p className="text-lg text-white/70">
-            The important thing is you're learning! 📚✨
+            The important thing is you're learning! 📚
           </p>
         </div>
       </div>

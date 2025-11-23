@@ -19,7 +19,7 @@ export default function EstimatedProfessionSlide() {
         <div className="space-y-4">
           <h2 className="text-5xl font-bold text-white">You Seem Like A...</h2>
           <p className="text-2xl text-white/90">
-            Based on your conversations 🔍
+            Based on your conversations...
           </p>
         </div>
 

@@ -37,7 +37,7 @@ const MONTH_LABELS = [
   "Dec",
 ];
 
-export default function MonthlyHoursSlide() {
+export default function MonthlyActivitySlide() {
   const { data, error } = useSlide();
 
   if (error) {
@@ -135,34 +135,19 @@ export default function MonthlyHoursSlide() {
     []
   );
 
-  const totalHours = monthlyHours.reduce(
-    (sum: number, hours: number) => sum + hours,
-    0
-  );
-
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-12 bg-linear-to-br from-purple-950 via-purple-900 to-indigo-950">
       <div className="w-full max-w-5xl space-y-8">
         <div className="text-center space-y-2">
-          <h2 className="text-5xl font-bold text-white">Monthly Activity</h2>
-          <p className="text-xl text-purple-200">
-            Your GPT usage throughout the year
-          </p>
+          <h2 className="text-5xl font-bold text-white pt-4">
+            Monthly Activity
+          </h2>
         </div>
 
-        <div className="bg-purple-900/30 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-purple-700/30">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-purple-700/30">
           <div className="h-[400px]">
             <Bar data={chartData} options={options} />
           </div>
-        </div>
-
-        <div className="text-center">
-          <p className="text-lg text-purple-200">
-            <span className="font-semibold text-white">
-              {totalHours.toFixed(1)} hours
-            </span>{" "}
-            total this year
-          </p>
         </div>
       </div>
     </div>

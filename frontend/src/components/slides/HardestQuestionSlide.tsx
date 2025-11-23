@@ -20,9 +20,7 @@ export default function HardestQuestionSlide() {
           <h2 className="text-5xl font-bold text-white">
             Your Hardest Question
           </h2>
-          <p className="text-2xl text-white/90">
-            When things got serious... 🧠
-          </p>
+          <p className="text-2xl text-white/90">When things got serious...</p>
         </div>
 
         {/* Question display */}

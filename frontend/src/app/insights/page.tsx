@@ -1,24 +1,26 @@
 "use client";
 
-import { ReactNode, useState, useEffect, Suspense } from "react";
+import BackButton from "@/src/components/layout/BackButton";
+import NextButton from "@/src/components/layout/NextButton";
+import AnimatedPostcardStack from "@/src/components/postcard/AnimatedPostcardStack";
+import PostcardStack from "@/src/components/postcard/PostcardStack";
+import EasiestQuestionSlide from "@/src/components/slides/EasiestQuestionSlide";
+import EstimatedProfessionSlide from "@/src/components/slides/EstimatedProfessionSlide";
+import HardestQuestionSlide from "@/src/components/slides/HardestQuestionSlide";
+import IntroSlide from "@/src/components/slides/IntroSlide";
+import YourLongestConversationSlide from "@/src/components/slides/YourLongestConversationSlide";
+import MonthlyActivitySlide from "@/src/components/slides/MonthlyActivitySlide";
+import WhenYouChatSlide from "@/src/components/slides/WhenYouChatSlide";
+import YourTopTopicsSlide from "@/src/components/slides/YourTopTopicsSlide";
+import TopicsByHourSlide from "@/src/components/slides/TopicsByHourSlide";
+import TopicsByMonthSlide from "@/src/components/slides/TopicsByMonthSlide";
+import YearlyHoursSlide from "@/src/components/slides/YearlyHoursSlide";
+import OutroSlide from "@/src/components/slides/OutroSlide";
+import { SlideDataProvider } from "@/src/contexts/SlideDataContext";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
-import AnimatedPostcardStack from "@/src/components/postcard/AnimatedPostcardStack";
-import BackButton from "@/src/components/layout/BackButton";
-import { POSTCARD_CONFIG, DEFAULT_BACKGROUND_CARDS } from "../../types";
-import IntroSlide from "@/src/components/slides/IntroSlide";
-import YearlyHoursSlide from "@/src/components/slides/YearlyHoursSlide";
-import MonthlyHoursSlide from "@/src/components/slides/MonthlyHoursSlide";
-import TimeOfDaySlide from "@/src/components/slides/TimeOfDaySlide";
-import LongestConversationSlide from "@/src/components/slides/LongestConversationSlide";
-import EasiestQuestionSlide from "@/src/components/slides/EasiestQuestionSlide";
-import HardestQuestionSlide from "@/src/components/slides/HardestQuestionSlide";
-import EstimatedProfessionSlide from "@/src/components/slides/EstimatedProfessionSlide";
-import TopTopicsSlide from "@/src/components/slides/TopTopicsSlide";
-import TopicsByMonthSlide from "@/src/components/slides/TopicsByMonthSlide";
-import PostcardStack from "@/src/components/postcard/PostcardStack";
-import NextButton from "@/src/components/layout/NextButton";
-import { SlideDataProvider } from "@/src/contexts/SlideDataContext";
+import { ReactNode, Suspense, useEffect, useState } from "react";
+import { DEFAULT_BACKGROUND_CARDS, POSTCARD_CONFIG } from "../../types";
 
 const LoadingSlide = () => (
   <div className="w-full h-full flex items-center justify-center bg-white">
@@ -42,54 +44,43 @@ export default function InsightsPage() {
     }, POSTCARD_CONFIG.animationDuration);
   };
 
-  const postcards: ReactNode[] = [
-    <IntroSlide key="intro" onContinue={handleNext} />,
-    <Suspense key="total-hours-suspense" fallback={<LoadingSlide />}>
-      <SlideDataProvider slide={1}>
-        <YearlyHoursSlide />
-      </SlideDataProvider>
-    </Suspense>,
-    <Suspense key="monthly-hours-suspense" fallback={<LoadingSlide />}>
-      <SlideDataProvider slide={2}>
-        <MonthlyHoursSlide />
-      </SlideDataProvider>
-    </Suspense>,
-    <Suspense key="time-of-day-suspense" fallback={<LoadingSlide />}>
-      <SlideDataProvider slide={3}>
-        <TimeOfDaySlide />
-      </SlideDataProvider>
-    </Suspense>,
-    <Suspense key="longest-conversation-suspense" fallback={<LoadingSlide />}>
-      <SlideDataProvider slide={4}>
-        <LongestConversationSlide />
-      </SlideDataProvider>
-    </Suspense>,
-    <Suspense key="easiest-question-suspense" fallback={<LoadingSlide />}>
-      <SlideDataProvider slide={5}>
-        <EasiestQuestionSlide />
-      </SlideDataProvider>
-    </Suspense>,
-    <Suspense key="hardest-question-suspense" fallback={<LoadingSlide />}>
-      <SlideDataProvider slide={6}>
-        <HardestQuestionSlide />
-      </SlideDataProvider>
-    </Suspense>,
-    <Suspense key="estimated-profession-suspense" fallback={<LoadingSlide />}>
-      <SlideDataProvider slide={7}>
-        <EstimatedProfessionSlide />
-      </SlideDataProvider>
-    </Suspense>,
-    <Suspense key="top-topics-suspense" fallback={<LoadingSlide />}>
-      <SlideDataProvider slide={8}>
-        <TopTopicsSlide />
-      </SlideDataProvider>
-    </Suspense>,
-    <Suspense key="topics-by-month-suspense" fallback={<LoadingSlide />}>
-      <SlideDataProvider slide={9}>
-        <TopicsByMonthSlide />
-      </SlideDataProvider>
-    </Suspense>,
+  const slides = [
+    { key: "intro", component: IntroSlide, slide: -1 },
+    { key: "total-hours", component: YearlyHoursSlide, slide: 0 },
+    { key: "monthly-hours", component: MonthlyActivitySlide, slide: 1 },
+    { key: "time-of-day", component: WhenYouChatSlide, slide: 2 },
+    {
+      key: "longest-conversation",
+      component: YourLongestConversationSlide,
+      slide: 3,
+    },
+    { key: "easiest-question", component: EasiestQuestionSlide, slide: 4 },
+    { key: "hardest-question", component: HardestQuestionSlide, slide: 5 },
+    {
+      key: "estimated-profession",
+      component: EstimatedProfessionSlide,
+      slide: 6,
+    },
+    { key: "top-topics", component: YourTopTopicsSlide, slide: 7 },
+    { key: "topics-by-month", component: TopicsByMonthSlide, slide: 8 },
+    { key: "topics-by-hour", component: TopicsByHourSlide, slide: 9 },
+    { key: "outro", component: OutroSlide, slide: 10 },
   ];
+
+  const postcards: ReactNode[] = slides.map(
+    ({ key, component: Component, slide }) => {
+      if (slide === null) {
+        return <Component key={key} />;
+      }
+      return (
+        <Suspense key={`${key}-suspense`} fallback={<LoadingSlide />}>
+          <SlideDataProvider slide={slide}>
+            <Component />
+          </SlideDataProvider>
+        </Suspense>
+      );
+    }
+  );
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -156,8 +147,8 @@ export default function InsightsPage() {
         {/* Stack of postcards - all positioned absolutely and centered */}
         <PostcardStack
           postcards={DEFAULT_BACKGROUND_CARDS}
-          width={1280}
-          height={720}
+          width={POSTCARD_CONFIG.width}
+          height={POSTCARD_CONFIG.height}
           background="#304158ff"
         />
 
@@ -167,8 +158,8 @@ export default function InsightsPage() {
           currentIndex={currentIndex}
           isAnimating={isAnimating}
           direction={direction}
-          width={1280}
-          height={720}
+          width={POSTCARD_CONFIG.width}
+          height={POSTCARD_CONFIG.height}
           baseZIndex={DEFAULT_BACKGROUND_CARDS.length}
         />
 

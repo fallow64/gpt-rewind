@@ -1,30 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
 import { useSlide } from "@/src/contexts/SlideDataContext";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-} from "chart.js";
-import { Line } from "react-chartjs-2";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
 
 const MONTH_LABELS = [
   "Jan",
@@ -52,62 +28,6 @@ export default function TopicsByMonthSlide() {
   // Expecting: { monthlyTopics: ["Topic A", "Topic B", ...] } - 12 topics, one per month
   const monthlyTopics = data.monthlyTopics || Array(12).fill("General");
 
-  const chartData = useMemo(
-    () => ({
-      labels: MONTH_LABELS,
-      datasets: [
-        {
-          label: "Top Topic",
-          data: MONTH_LABELS.map((_, idx) => idx), // Just for positioning
-          backgroundColor: "transparent",
-          borderColor: "transparent",
-          pointRadius: 0,
-        },
-      ],
-    }),
-    []
-  );
-
-  const options = useMemo(
-    () => ({
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: false as const,
-      plugins: {
-        legend: {
-          display: false,
-        },
-        title: {
-          display: false,
-        },
-        tooltip: {
-          enabled: false,
-        },
-      },
-      scales: {
-        x: {
-          grid: {
-            display: false,
-          },
-          ticks: {
-            color: "#e9d5ff",
-            font: {
-              size: 13,
-              weight: 600,
-            },
-          },
-          border: {
-            display: false,
-          },
-        },
-        y: {
-          display: false,
-        },
-      },
-    }),
-    []
-  );
-
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-12 bg-linear-to-br from-purple-950 via-purple-900 to-indigo-950">
       <div className="w-full max-w-6xl space-y-8">
@@ -121,18 +41,17 @@ export default function TopicsByMonthSlide() {
         </div>
 
         <div className="bg-purple-900/30 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-purple-700/30">
-          {/* Custom topic display */}
-          <div className="space-y-4">
+          {/* 6x2 Grid layout */}
+          <div className="grid grid-cols-6 gap-4">
             {MONTH_LABELS.map((month, idx) => (
               <div
                 key={month}
-                className="flex items-center gap-6 py-3 px-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                className="flex flex-col items-center gap-3 py-4 px-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
               >
-                <div className="text-purple-300 font-semibold text-lg min-w-[60px]">
+                <div className="text-purple-300 font-semibold text-sm">
                   {month}
                 </div>
-                <div className="flex-1 h-px bg-purple-500/30"></div>
-                <div className="text-white text-lg font-medium">
+                <div className="text-white text-base font-medium text-center">
                   {monthlyTopics[idx]}
                 </div>
               </div>

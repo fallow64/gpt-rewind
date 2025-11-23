@@ -2,7 +2,7 @@
 
 import { useSlide } from "@/src/contexts/SlideDataContext";
 
-export default function TopTopicsSlide() {
+export default function YourTopTopicsSlide() {
   const { data, error } = useSlide();
 
   if (error) {
@@ -31,49 +31,39 @@ export default function TopTopicsSlide() {
           {/* Second Place - Left */}
           <div className="flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
             <div className="text-4xl font-bold text-white/40">2</div>
-            <div className="bg-white/10 backdrop-blur-sm border-2 border-white/30 rounded-t-2xl px-6 py-8 min-w-60 h-[200px] flex items-center justify-center">
+            <div className="bg-white/10 backdrop-blur-sm border-2 border-white/30 rounded-2xl px-6 py-8 min-w-60 h-[200px] flex items-center justify-center">
               <p className="text-2xl font-semibold text-white/95 leading-tight">
                 {topTopics[1]}
               </p>
             </div>
-            <div className="bg-linear-to-t from-slate-700 to-slate-600 w-full h-24 rounded-b-xl border-2 border-slate-500/50 shadow-2xl"></div>
           </div>
 
           {/* First Place - Center (Tallest) */}
           <div className="flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <div className="relative">
-              <div className="text-5xl font-black text-transparent bg-linear-to-r from-yellow-200 via-yellow-300 to-yellow-400 bg-clip-text">
-                1
-              </div>
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-16 h-16">
+            <div className="relative flex items-center justify-center">
+              <div className="absolute w-16 h-16 -top-3">
                 <div className="w-full h-full bg-linear-to-br from-yellow-300 to-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50"></div>
               </div>
+              <div className="text-5xl font-black text-transparent bg-linear-to-r from-yellow-200 via-yellow-300 to-yellow-400 bg-clip-text relative z-10">
+                1
+              </div>
             </div>
-            <div className="bg-linear-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-sm border-2 border-yellow-400/50 rounded-t-2xl px-6 py-8 min-w-[260px] h-[260px] flex items-center justify-center shadow-2xl shadow-yellow-500/20">
+            <div className="bg-linear-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-sm border-2 border-yellow-400/50 rounded-2xl px-6 py-8 min-w-[260px] h-[260px] flex items-center justify-center shadow-2xl shadow-yellow-500/20">
               <p className="text-3xl font-bold text-white leading-tight">
                 {topTopics[0]}
               </p>
             </div>
-            <div className="bg-linear-to-t from-yellow-700 to-yellow-600 w-full h-32 rounded-b-xl border-2 border-yellow-500/50 shadow-2xl"></div>
           </div>
 
           {/* Third Place - Right */}
           <div className="flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-300">
             <div className="text-3xl font-bold text-white/30">3</div>
-            <div className="bg-white/10 backdrop-blur-sm border-2 border-white/20 rounded-t-2xl px-6 py-8 min-w-60 h-40 flex items-center justify-center">
+            <div className="bg-white/10 backdrop-blur-sm border-2 border-white/20 rounded-2xl px-6 py-8 min-w-60 h-40 flex items-center justify-center">
               <p className="text-xl font-semibold text-white/90 leading-tight">
                 {topTopics[2]}
               </p>
             </div>
-            <div className="bg-linear-to-t from-amber-800 to-amber-700 w-full h-20 rounded-b-xl border-2 border-amber-600/50 shadow-2xl"></div>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="pt-4">
-          <p className="text-lg text-white/70 font-light">
-            These are the themes that appeared most in your conversations
-          </p>
         </div>
       </div>
     </div>

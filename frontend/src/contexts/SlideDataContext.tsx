@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-  use,
-} from "react";
+import { createContext, useContext, useState, ReactNode, use } from "react";
 
 interface SlideDataContextType {
   data: any;
