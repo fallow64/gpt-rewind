@@ -21,13 +21,6 @@ function Header() {
         }}
       >
         GPT Rewind
-        <Image
-          src="/repeat.svg"
-          alt="Repeat icon"
-          width={32}
-          height={32}
-          className="invert"
-        />
       </Link>
 
       <div className="flex items-center gap-6 mr-4">
