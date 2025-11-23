@@ -1,7 +1,8 @@
+import { ReactNode } from "react";
 import Postcard from "./Postcard";
 
 interface AnimatedPostcardProps {
-  content?: React.ReactNode;
+  content?: ReactNode;
   width: number;
   height: number;
   zIndex: number;

@@ -2,7 +2,7 @@
 
 import { useSlide } from "@/src/contexts/SlideDataContext";
 
-export default function LongestConversationSlide() {
+export default function YourLongestConversationSlide() {
   const { data, error } = useSlide();
 
   if (error) {
@@ -44,17 +44,15 @@ export default function LongestConversationSlide() {
                 <span className="font-bold">
                   {Math.floor(longestConversationHours / 2.5)}
                 </span>{" "}
-                movies back-to-back! 🍿
+                movies back-to-back!
               </>
             ) : longestConversationHours >= 2 ? (
               <>
                 That's longer than most meetings! You were really deep in
-                thought. 💭
+                thought.
               </>
             ) : (
-              <>
-                Short but meaningful conversations can be the most impactful! 💫
-              </>
+              <>Short but meaningful conversations can be the most impactful!</>
             )}
           </p>
         </div>
