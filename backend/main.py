@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import os
 from fastapi import FastAPI, HTTPException, File, UploadFile
@@ -20,7 +21,7 @@ app.add_middleware(
 
 
 # placeholder for albert's function
-async def create_analyze_files(output_file_folder: str, conversation_file_path: str):
+async def create_analyze_files(output_file_folder: str, conversation_file_path: str, random_id: str):
     # for now just write empty json 0 to 10
     insights_folder = os.path.join(output_file_folder, "insights")
     os.makedirs(insights_folder, exist_ok=True)
@@ -28,7 +29,16 @@ async def create_analyze_files(output_file_folder: str, conversation_file_path: 
         insight_file_path = os.path.join(insights_folder, f"{page_index}.json")
         with open(insight_file_path, "w") as f:
             f.write("{}")
-
+    
+    # read the resulting files and generate audio files
+    insight_data = None
+    for page_index in range(-1, 11):
+        insight_file_path = os.path.join(output_file_folder, "insights", f"{page_index}.json")
+        if os.path.exists(insight_file_path):
+            with open(insight_file_path, "r") as f:
+                insight_data = f.read()
+        # disable transcribing for now
+        # await transcribe_insight(user_id=random_id, insight=insight_data, page_index=page_index)
 
 @app.post("/conversation")
 async def process_conversation(file: UploadFile = File(...)):
@@ -46,15 +56,7 @@ async def process_conversation(file: UploadFile = File(...)):
         f.write(file.file.read())
 
     # process conversation file
-    await create_analyze_files(output_user_folder, input_file_path)
-
-    # read the resulting file and generate audio files
-    for page_index in range(-1, 11):
-        insight_file_path = os.path.join(output_user_folder, "insights", f"{page_index}.json")
-        if os.path.exists(insight_file_path):
-            with open(insight_file_path, "r") as f:
-                insight_data = f.read()
-            await transcribe_insight(user_id=random_id, insight=insight_data, page_index=page_index)
+    asyncio.create_task(create_analyze_files(output_user_folder, input_file_path, random_id))
     
     # Return the conversation ID
     return {"conversationId": random_id}
