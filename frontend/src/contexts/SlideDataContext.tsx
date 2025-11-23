@@ -1,12 +1,20 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import { useConversation } from "./ConversationContext";
 
 interface SlideDataContextType {
   data: any;
   error: Error | null;
   refetch: () => void;
+  audioUrl: string | null;
 }
 
 const SlideDataContext = createContext<SlideDataContextType | undefined>(
@@ -16,11 +24,15 @@ const SlideDataContext = createContext<SlideDataContextType | undefined>(
 interface SlideDataProviderProps {
   slide: number;
   children: ReactNode;
+  isActive?: boolean;
 }
 
 // Create a cache for data to avoid refetching
 const dataCache = new Map<string, any>();
 const pendingPromises = new Map<string, Promise<any>>();
+
+// Global audio instance tracker - only one audio should play at a time
+let currentAudioInstance: HTMLAudioElement | null = null;
 
 async function fetchSlideData(
   conversationId: string,
@@ -60,7 +72,11 @@ async function fetchSlideData(
   return promise;
 }
 
-export function SlideDataProvider({ slide, children }: SlideDataProviderProps) {
+export function SlideDataProvider({
+  slide,
+  children,
+  isActive = false,
+}: SlideDataProviderProps) {
   const { conversationId } = useConversation();
 
   if (!conversationId) {
@@ -86,6 +102,52 @@ export function SlideDataProvider({ slide, children }: SlideDataProviderProps) {
   // Data is available from cache
   const data = dataCache.get(cacheKey);
   const [error, setError] = useState<Error | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Build audio URL
+  const audioUrl = `http://localhost:8000/data/${conversationId}/sounds/${slide}`;
+
+  // Play/pause audio based on isActive state
+  useEffect(() => {
+    if (!audioRef.current) {
+      const audio = new Audio(audioUrl);
+      audio.loop = false;
+      audio.volume = 0.3; // Set to 30% volume
+      audioRef.current = audio;
+    }
+
+    if (isActive) {
+      // Stop any currently playing audio before starting new one
+      if (currentAudioInstance && currentAudioInstance !== audioRef.current) {
+        currentAudioInstance.pause();
+        currentAudioInstance.currentTime = 0;
+      }
+
+      // Set this as the current playing audio
+      currentAudioInstance = audioRef.current;
+
+      // Start playing when active
+      audioRef.current.play().catch((err) => {
+        console.warn("Audio autoplay failed:", err);
+      });
+    } else {
+      // Pause when not active
+      audioRef.current.pause();
+
+      // Clear global reference if this was the current playing audio
+      if (currentAudioInstance === audioRef.current) {
+        currentAudioInstance = null;
+      }
+    }
+
+    // Cleanup: stop audio when slide unmounts
+    return () => {
+      if (audioRef.current && !isActive) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    };
+  }, [audioUrl, isActive]);
 
   const refetch = () => {
     dataCache.delete(cacheKey);
@@ -94,7 +156,7 @@ export function SlideDataProvider({ slide, children }: SlideDataProviderProps) {
   };
 
   return (
-    <SlideDataContext.Provider value={{ data, error, refetch }}>
+    <SlideDataContext.Provider value={{ data, error, refetch, audioUrl }}>
       {children}
     </SlideDataContext.Provider>
   );

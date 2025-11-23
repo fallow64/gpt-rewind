@@ -76,13 +76,13 @@ export default function InsightsPage() {
   ];
 
   const postcards: ReactNode[] = slides.map(
-    ({ key, component: Component, slide }) => {
+    ({ key, component: Component, slide }, index) => {
       if (slide === null) {
         return <Component key={key} />;
       }
       return (
         <Suspense key={`${key}-suspense`} fallback={<LoadingSlide />}>
-          <SlideDataProvider slide={slide}>
+          <SlideDataProvider slide={slide} isActive={index === currentIndex}>
             <Component />
           </SlideDataProvider>
         </Suspense>
