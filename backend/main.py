@@ -45,8 +45,8 @@ async def create_analyze_files(output_file_folder: str, conversation_file_path: 
         result = run_pipeline(
             conversation_file=conversation_file_path,
             output_dir=output_file_folder,
-            enable_embeddings=False,  # Set to True to enable (requires GPU, slow)
-            enable_analytics=False     # Set to True to enable (requires embeddings)
+            enable_embeddings=True,  # Set to True to enable (requires GPU, slow)
+            enable_analytics=True     # Set to True to enable (requires embeddings)
         )
         
         if not result['success']:
@@ -87,8 +87,8 @@ async def create_analyze_files(output_file_folder: str, conversation_file_path: 
 
 @app.post("/conversation")
 async def process_conversation(file: UploadFile = File(...)):
-    # random_id = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8')
-    random_id = "abc"
+    random_id = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8')
+    # random_id = "abc"
 
     # create user folder
     output_user_folder = os.path.join(OUTPUT_FOLDER, random_id)

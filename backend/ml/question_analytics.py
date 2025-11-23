@@ -692,8 +692,8 @@ def analyze_questions(embedded_file: str, output_dir: str = '.', similarity_thre
     return {
         'segmented_file': segmented_file,
         'questions_file': output_file if extremes_data else None,
-        'hardest': hardest,
-        'easiest': easiest,
+        'hardest': extremes_data.get('hardest'),
+        'easiest': extremes_data.get('easiest'),
         'all_topics': all_topics
     }
 

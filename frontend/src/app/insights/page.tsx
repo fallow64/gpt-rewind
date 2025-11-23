@@ -17,6 +17,7 @@ import YourTopTopicsSlide from "@/src/components/slides/YourTopTopicsSlide";
 import { SlideDataProvider } from "@/src/contexts/SlideDataContext";
 import { ReactNode, Suspense, useEffect, useState } from "react";
 import { DEFAULT_BACKGROUND_CARDS, POSTCARD_CONFIG } from "../../types";
+import { useSessionStorage } from "usehooks-ts";
 import OutroSlide from "@/src/components/slides/OutroSlide";
 
 const LoadingSlide = () => (
@@ -39,6 +40,7 @@ const LoadingSlide = () => (
 
 export default function InsightsPage() {
   const [isMounted, setIsMounted] = useState(false);
+  const [isAudioEnabled] = useSessionStorage("audioEnabled", true);
 
   useEffect(() => {
     setIsMounted(true);
@@ -82,7 +84,11 @@ export default function InsightsPage() {
       }
       return (
         <Suspense key={`${key}-suspense`} fallback={<LoadingSlide />}>
-          <SlideDataProvider slide={slide} isActive={index === currentIndex}>
+          <SlideDataProvider
+            slide={slide}
+            isActive={index === currentIndex}
+            isAudioEnabled={isAudioEnabled}
+          >
             <Component />
           </SlideDataProvider>
         </Suspense>

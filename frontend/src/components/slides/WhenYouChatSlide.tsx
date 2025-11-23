@@ -130,14 +130,14 @@ export default function WhenYouChatSlide() {
         </div>
 
         {/* Summary */}
-        <div className="text-center">
+        {/* <div className="text-center">
           <p className="text-sm text-purple-200">
             Peak activity:{" "}
             <span className="text-white font-bold">
               {HOUR_LABELS[hourlyActivity.indexOf(Math.max(...hourlyActivity))]}
             </span>
           </p>
-        </div>
+        </div> */}
       </div>
     </div>
   );

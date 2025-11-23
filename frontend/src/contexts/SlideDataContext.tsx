@@ -25,6 +25,7 @@ interface SlideDataProviderProps {
   slide: number;
   children: ReactNode;
   isActive?: boolean;
+  isAudioEnabled?: boolean;
 }
 
 // Create a cache for data to avoid refetching
@@ -76,6 +77,7 @@ export function SlideDataProvider({
   slide,
   children,
   isActive = false,
+  isAudioEnabled = true,
 }: SlideDataProviderProps) {
   const { conversationId } = useConversation();
 
@@ -107,7 +109,7 @@ export function SlideDataProvider({
   // Build audio URL
   const audioUrl = `http://localhost:8000/data/${conversationId}/sounds/${slide}`;
 
-  // Play/pause audio based on isActive state
+  // Play/pause audio based on isActive state and audio enabled setting
   useEffect(() => {
     if (!audioRef.current) {
       const audio = new Audio(audioUrl);
@@ -116,7 +118,7 @@ export function SlideDataProvider({
       audioRef.current = audio;
     }
 
-    if (isActive) {
+    if (isActive && isAudioEnabled) {
       // Stop any currently playing audio before starting new one
       if (currentAudioInstance && currentAudioInstance !== audioRef.current) {
         currentAudioInstance.pause();
@@ -131,7 +133,7 @@ export function SlideDataProvider({
         console.warn("Audio autoplay failed:", err);
       });
     } else {
-      // Pause when not active
+      // Pause when not active or audio is disabled
       audioRef.current.pause();
 
       // Clear global reference if this was the current playing audio
@@ -147,7 +149,7 @@ export function SlideDataProvider({
         audioRef.current.currentTime = 0;
       }
     };
-  }, [audioUrl, isActive]);
+  }, [audioUrl, isActive, isAudioEnabled]);
 
   const refetch = () => {
     dataCache.delete(cacheKey);
