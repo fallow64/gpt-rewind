@@ -1,19 +1,26 @@
 "use client";
 
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState, useEffect, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import AnimatedPostcardStack from "@/src/components/postcard/AnimatedPostcardStack";
-import NextButton from "@/src/components/layout/NextButton";
 import BackButton from "@/src/components/layout/BackButton";
 import { POSTCARD_CONFIG, DEFAULT_BACKGROUND_CARDS } from "../../types";
 import IntroSlide from "@/src/components/slides/IntroSlide";
+import YearlyHoursSlide from "@/src/components/slides/YearlyHoursSlide";
+import MonthlyHoursSlide from "@/src/components/slides/MonthlyHoursSlide";
 import PostcardStack from "@/src/components/postcard/PostcardStack";
-import { useData } from "@/src/contexts/DataContext";
+import NextButton from "@/src/components/layout/NextButton";
+import { SlideDataProvider } from "@/src/contexts/SlideDataContext";
+
+const LoadingSlide = () => (
+  <div className="w-full h-full flex items-center justify-center bg-white">
+    <div className="text-gray-900 text-2xl">Loading...</div>
+  </div>
+);
 
 export default function InsightsPage() {
   const { data: session, status } = useSession();
-  const { uploadedData } = useData();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -21,15 +28,25 @@ export default function InsightsPage() {
     if (isAnimating) return;
     setIsAnimating(true);
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % postcardDataWithIntro.length);
+      setCurrentIndex((prev) => (prev + 1) % postcards.length);
       setIsAnimating(false);
     }, POSTCARD_CONFIG.animationDuration);
   };
 
-  const postcardDataWithIntro: ReactNode[] = [
+  const postcards: ReactNode[] = [
     <IntroSlide key="intro" onContinue={handleNext} />,
+    <Suspense key="total-hours-suspense" fallback={<LoadingSlide />}>
+      <SlideDataProvider slide={1}>
+        <YearlyHoursSlide />
+      </SlideDataProvider>
+    </Suspense>,
+    <Suspense key="monthly-hours-suspense" fallback={<LoadingSlide />}>
+      <SlideDataProvider slide={2}>
+        <MonthlyHoursSlide />
+      </SlideDataProvider>
+    </Suspense>,
 
-    <div key="topics-over-time" className="w-full h-full space-y-6 bg-red-300">
+    <div key="topics-over-time" className="w-full h-full space-y-6">
       <h2 className="text-4xl font-bold text-gray-900">
         Your topics over time
       </h2>
@@ -47,32 +64,19 @@ export default function InsightsPage() {
     </div>,
   ];
 
-  // Redirect if not authenticated or no data uploaded
+  // Redirect if not authenticated
   useEffect(() => {
     if (status === "unauthenticated") {
       redirect("/");
     }
-    // Optional: uncomment to require data upload before viewing insights
-    // if (status === "authenticated" && !uploadedData) {
-    //   redirect("/");
-    // }
-  }, [status, uploadedData]);
-
-  // Log uploaded data for debugging
-  useEffect(() => {
-    if (uploadedData) {
-      console.log("Uploaded data available:", uploadedData);
-    }
-  }, [uploadedData]);
+  }, [status]);
 
   const handleBack = () => {
     if (isAnimating) return;
     setIsAnimating(true);
     setTimeout(() => {
       setCurrentIndex(
-        (prev) =>
-          (prev - 1 + postcardDataWithIntro.length) %
-          postcardDataWithIntro.length
+        (prev) => (prev - 1 + postcards.length) % postcards.length
       );
       setIsAnimating(false);
     }, POSTCARD_CONFIG.animationDuration);
@@ -131,7 +135,7 @@ export default function InsightsPage() {
 
         {/* Animated postcard stack with current and next */}
         <AnimatedPostcardStack
-          postcards={postcardDataWithIntro}
+          postcards={postcards}
           currentIndex={currentIndex}
           isAnimating={isAnimating}
           width={1280}
@@ -140,10 +144,9 @@ export default function InsightsPage() {
         />
 
         {/* Navigation buttons */}
-        <BackButton
-          onClick={handleBack}
-          disabled={isAnimating || currentIndex === 0}
-        />
+        {currentIndex !== 0 && (
+          <BackButton onClick={handleBack} disabled={isAnimating} />
+        )}
         <NextButton onClick={handleNext} disabled={isAnimating} />
       </main>
     </div>

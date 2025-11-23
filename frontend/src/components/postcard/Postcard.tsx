@@ -23,7 +23,14 @@ export default function Postcard({
       }}
     >
       {/* Content area */}
-      <div className="relative h-full w-full">{contentHtml}</div>
+      <div
+        className="relative h-full w-full"
+        style={{
+          backgroundColor: "#304158",
+        }}
+      >
+        {contentHtml}
+      </div>
 
       {/* Corner fold effect */}
       <div className="absolute top-0 right-0 w-10 h-10 overflow-hidden">

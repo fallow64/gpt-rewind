@@ -12,6 +12,8 @@ export interface PostcardStackItem {
   offset: { x: number; y: number };
 }
 
+export interface CompleteConversationHistory {}
+
 // Configuration constants
 export const POSTCARD_CONFIG = {
   width: 1280,
@@ -33,4 +35,4 @@ export const DEFAULT_BACKGROUND_CARDS: PostcardStackItem[] = [
   { rotation: -3, offset: { x: 25, y: 30 } },
   { rotation: 5, offset: { x: -15, y: 35 } },
   { rotation: -4, offset: { x: 35, y: -25 } },
-];
+] as const;

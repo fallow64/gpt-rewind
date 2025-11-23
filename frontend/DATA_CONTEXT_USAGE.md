@@ -10,8 +10,8 @@ The application now stores the uploaded JSON data in a React Context that is ava
 
 The `DataContext` provides:
 
-- `uploadedData`: The parsed JSON data from the uploaded file
-- `setUploadedData(data)`: Function to store the data
+- `localData`: The parsed JSON data from the uploaded file
+- `setLocalData(data)`: Function to store the data
 - `clearData()`: Function to clear the stored data
 
 ### Usage in Components
@@ -22,11 +22,11 @@ Import and use the `useData` hook in any component:
 import { useData } from "@/src/contexts/DataContext";
 
 function MyComponent() {
-  const { uploadedData } = useData();
+  const { localData } = useData();
 
   // Use the data
-  if (uploadedData) {
-    console.log("User uploaded data:", uploadedData);
+  if (localData) {
+    console.log("User uploaded data:", localData);
     // Process and display the data
   }
 
@@ -42,7 +42,7 @@ function MyComponent() {
 
    - User uploads a JSON file
    - File is parsed and validated
-   - Data is stored in DataContext via `setUploadedData(jsonData)`
+   - Data is stored in DataContext via `setLocalData(jsonData)`
    - Data is sent to API endpoint for server-side processing
    - User is redirected to insights page
 
@@ -54,7 +54,7 @@ function MyComponent() {
 
 3. **Slide Components** (e.g., `TopTopicsThisYearSlide.tsx`):
    - Import and use the `useData` hook
-   - Access `uploadedData` to display user-specific insights
+   - Access `localData` to display user-specific insights
    - Fallback to sample data if no upload exists
 
 ## Example: Processing Uploaded Data
@@ -63,11 +63,11 @@ function MyComponent() {
 import { useData } from "@/src/contexts/DataContext";
 
 function MySlide() {
-  const { uploadedData } = useData();
+  const { localData } = useData();
 
   // Process the uploaded data
-  const processedData = uploadedData
-    ? processMyData(uploadedData)
+  const processedData = localData
+    ? processMyData(localData)
     : defaultSampleData;
 
   return (
