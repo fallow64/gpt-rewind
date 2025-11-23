@@ -2,11 +2,21 @@ import base64
 import os
 from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from generate_audio import transcribe_insight
 
 OUTPUT_FOLDER = "output_files"
 INPUT_FOLDER = "input_files"
 app = FastAPI()
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # placeholder for albert's function
