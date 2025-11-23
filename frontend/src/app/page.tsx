@@ -1,96 +1,126 @@
 "use client";
 
-import { ReactNode, useState } from "react";
-import AnimatedPostcardStack from "@/src/components/postcard/AnimatedPostcardStack";
-import NextButton from "@/src/components/layout/NextButton";
-import BackButton from "@/src/components/layout/BackButton";
-import { POSTCARD_CONFIG, DEFAULT_BACKGROUND_CARDS } from "../types";
-import TopicsPerHourSlide from "@/src/components/slides/TopicsPerHourSlide";
-import TopTopicsThisYearSlide from "@/src/components/slides/TopTopicsThisYearSlide";
-import PostcardStack from "@/src/components/postcard/PostcardStack";
-
-const postcardData: ReactNode[] = [
-  <TopTopicsThisYearSlide />,
-  <TopicsPerHourSlide />,
-
-  <div className="w-full h-full space-y-6 bg-red-300">
-    <h2 className="text-4xl font-bold text-gray-900">Your topics over time</h2>
-    <div className="text-gray-800">
-      <p className="text-xl mb-4">Your interests have evolved significantly!</p>
-      <ul className="list-disc list-inside text-left space-y-2 text-lg">
-        <li>2022: Travel and Adventure</li>
-        <li>2023: Technology and AI</li>
-        <li>2024: Personal Development</li>
-        <li>(insert chart here)</li>
-      </ul>
-    </div>
-  </div>,
-];
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import ProgressIndicator from "@/src/components/workflow/ProgressIndicator";
+import StepLabels from "@/src/components/workflow/StepLabels";
+import SignInStep from "@/src/components/workflow/SignInStep";
+import UploadStep from "@/src/components/workflow/UploadStep";
+import ProcessStep from "@/src/components/workflow/ProcessStep";
+import ProcessingState from "@/src/components/workflow/ProcessingState";
+import LoadingState from "@/src/components/workflow/LoadingState";
+import { useData } from "@/src/contexts/DataContext";
 
 export default function Home() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const { setUploadedData } = useData();
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
 
-  const handleNext = () => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % postcardData.length);
-      setIsAnimating(false);
-    }, POSTCARD_CONFIG.animationDuration);
+  const stepLabels = ["Sign In", "Upload", "Process", "View Insights"];
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type === "application/json") {
+      setUploadedFile(file);
+      setCurrentStep(3);
+    } else {
+      alert("Please upload a valid JSON file");
+    }
   };
 
-  const handleBack = () => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    setTimeout(() => {
-      setCurrentIndex(
-        (prev) => (prev - 1 + postcardData.length) % postcardData.length
-      );
-      setIsAnimating(false);
-    }, POSTCARD_CONFIG.animationDuration);
+  const handleProcessData = async () => {
+    if (!uploadedFile) return;
+
+    setIsProcessing(true);
+
+    try {
+      // Read file content
+      const fileContent = await uploadedFile.text();
+      const jsonData = JSON.parse(fileContent);
+
+      // Store data in context for use across the app
+      setUploadedData(jsonData);
+
+      // Generic POST API call - easy to edit
+      const response = await fetch("/api/process-data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: session?.user?.id,
+          data: jsonData,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to process data");
+      }
+
+      const result = await response.json();
+      console.log("Processing result:", result);
+
+      // Redirect to insights
+      router.push("/insights");
+    } catch (error) {
+      console.error("Error processing data:", error);
+      alert("Failed to process data. Please try again.");
+      setIsProcessing(false);
+    }
   };
+
+  // Update step based on authentication
+  if (status === "authenticated" && currentStep === 1) {
+    setCurrentStep(2);
+  }
 
   return (
-    <div
-      className="relative overflow-hidden bg-linear-to-br from-gray-950 via-gray-900 to-black"
-      style={{ minHeight: "calc(100vh - 64px)" }}
-    >
-      {/* Abstract table texture - dark effect */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="h-full w-full bg-linear-to-b from-gray-800/30 via-transparent to-gray-950/30"></div>
-        <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_2px,rgba(0,0,0,0.1)_2px,rgba(0,0,0,0.1)_4px)]"></div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-linear-to-br from-gray-950 via-gray-900 to-black text-white p-8">
+      <div className="max-w-4xl mx-auto w-full space-y-8">
+        <div className="text-center space-y-4">
+          <h1 className="text-6xl font-bold">Welcome to GPT Rewind</h1>
+          <p className="text-2xl text-white/80">
+            Discover your ChatGPT conversation insights
+          </p>
+        </div>
+
+        <ProgressIndicator currentStep={currentStep} totalSteps={4} />
+
+        {/* Step Content */}
+        <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 min-h-[300px] flex flex-col items-center justify-center">
+          {/* Step 1: Login */}
+          {currentStep === 1 && <SignInStep />}
+
+          {/* Step 2: Upload */}
+          {currentStep === 2 && !uploadedFile && (
+            <UploadStep onFileUpload={handleFileUpload} />
+          )}
+
+          {/* Step 3: Process */}
+          {currentStep === 3 && !isProcessing && uploadedFile && (
+            <ProcessStep
+              fileName={uploadedFile.name}
+              onChangeFile={() => {
+                setUploadedFile(null);
+                setCurrentStep(2);
+              }}
+              onProcess={handleProcessData}
+            />
+          )}
+
+          {/* Processing State */}
+          {isProcessing && <ProcessingState />}
+
+          {/* Loading state for initial auth check */}
+          {status === "loading" && <LoadingState />}
+        </div>
+
+        <StepLabels currentStep={currentStep} steps={stepLabels} />
       </div>
-
-      <main
-        className="relative flex items-center justify-center p-8"
-        style={{ minHeight: "calc(100vh - 64px)" }}
-      >
-        {/* Stack of postcards - all positioned absolutely and centered */}
-        <PostcardStack
-          postcards={DEFAULT_BACKGROUND_CARDS}
-          width={1280}
-          height={720}
-          background="#304158ff"
-        />
-
-        {/* Animated postcard stack with current and next */}
-        <AnimatedPostcardStack
-          postcards={postcardData}
-          currentIndex={currentIndex}
-          isAnimating={isAnimating}
-          width={1280}
-          height={720}
-          baseZIndex={DEFAULT_BACKGROUND_CARDS.length}
-        />
-
-        {/* Navigation buttons */}
-        <BackButton
-          onClick={handleBack}
-          disabled={isAnimating || currentIndex === 0}
-        />
-        <NextButton onClick={handleNext} disabled={isAnimating} />
-      </main>
     </div>
   );
 }
