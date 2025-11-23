@@ -53,6 +53,6 @@ async def transcribe_insight(user_id: str, insight: object, page_index: int):
 async def transcribe_literal(user_id: str, text: str, page_index: int):
     client = FishAudio(api_key=FISH_AUDIO_API_KEY)
     audio = client.tts.convert(text = text, reference_id = REFERENCE_ID)
-    output_dir = os.path.join(os.getcwd(), "user", user_id, "sound")
+    output_dir = os.path.join("output_files", user_id, "sounds")
     os.makedirs(output_dir, exist_ok=True)
     save(audio, os.path.join(output_dir, f"{page_index}.mp3"))

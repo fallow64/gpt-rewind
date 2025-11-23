@@ -59,15 +59,16 @@ async def get_insights_for_page(random_id, page_index):
         return data
     else:
         # couldn't find the file, 404
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404, detail="Insight not found")
     
     
 
 @app.get("/data/{random_id}/sounds/{page_index}")
 async def get_sound_for_page(random_id: str, page_index: int):
-    file_path = os.path.join(OUTPUT_FOLDER, random_id, "sound", f"{page_index}.mp3")
+    file_path = os.path.join(OUTPUT_FOLDER, random_id, "sounds", f"{page_index}.mp3")
+    print(f"Looking for sound file at: {file_path}")
     
     if os.path.exists(file_path):
         return FileResponse(file_path, filename=file_path)
     else:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404, detail="Sound not found")
