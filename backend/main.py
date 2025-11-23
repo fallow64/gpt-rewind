@@ -86,7 +86,8 @@ async def create_analyze_files(output_file_folder: str, conversation_file_path: 
 
 @app.post("/conversation")
 async def process_conversation(file: UploadFile = File(...)):
-    random_id = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8')
+    # random_id = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8')
+    random_id = "abc"
 
     # create user folder
     output_user_folder = os.path.join(OUTPUT_FOLDER, random_id)

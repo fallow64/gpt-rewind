@@ -156,24 +156,16 @@ def extract_insights(compression_result: Dict[str, Any],
     longest_conv = analytics.get('longest_conversation', {})
     
     # Page -1: Introduction / Welcome
-    insights[-1] = {
-        'type': 'intro',
-        'message': 'Welcome to GPT Rewind!'
-    }
+    insights[-1] = {}
     
     # Page 0: Total hours
     insights[0] = {
-        'type': 'total_hours',
-        'value': yearly.get('total_hours', 0),
-        'total_messages': yearly.get('total_messages', 0),
-        'total_conversations': yearly.get('total_conversations', 0)
+        'data': yearly.get('total_hours', 0),
     }
     
     # Page 1: Hours by month
     insights[1] = {
-        'type': 'hours_by_month',
         'data': {month: stats.get('total_hours', 0) for month, stats in monthly.items()},
-        'peak_month': max(monthly.items(), key=lambda x: x[1].get('total_hours', 0))[0] if monthly else None
     }
     
     # Page 2: Hours by time of day
@@ -184,67 +176,44 @@ def extract_insights(compression_result: Dict[str, Any],
             hourly_dist[int(hour)] = hourly_dist.get(int(hour), 0) + count
     
     insights[2] = {
-        'type': 'hours_by_time',
         'data': hourly_dist,
-        'peak_hour': peak_usage.get('hour_of_day'),
-        'peak_count': peak_usage.get('message_count', 0)
     }
     
     # Page 3: Longest conversation
     insights[3] = {
-        'type': 'longest_conversation',
-        'duration_hours': longest_conv.get('duration_hours', 0),
-        'conversation_id': longest_conv.get('conversation_id')
+        'data': longest_conv.get('duration_hours', 0),
     }
     
     # Page 4: Easiest question (if available)
     if analytics_result and analytics_result.get('easiest'):
         easiest = analytics_result['easiest']
         insights[4] = {
-            'type': 'easiest_question',
-            'text': easiest.get('text', ''),
-            'score': easiest.get('score', 0),
-            'metrics': easiest.get('metrics', {})
+            'data': easiest.get('text', ''),
         }
     else:
         insights[4] = {
-            'type': 'easiest_question',
-            'text': 'Analysis not available',
-            'note': 'Embedding-based analysis was not run'
+            'data': 'Embedding-based analysis was not run'
         }
     
     # Page 5: Hardest question (if available)
     if analytics_result and analytics_result.get('hardest'):
         hardest = analytics_result['hardest']
         insights[5] = {
-            'type': 'hardest_question',
-            'text': hardest.get('text', ''),
-            'score': hardest.get('score', 0),
-            'metrics': hardest.get('metrics', {})
+            'data': hardest.get('text', ''),
         }
     else:
         insights[5] = {
-            'type': 'hardest_question',
-            'text': 'Analysis not available',
-            'note': 'Embedding-based analysis was not run'
+            'data': 'Analysis not available',
         }
     
-    # Page 6: Profession/field (placeholder - would need topic modeling)
-    insights[6] = {
-        'type': 'profession',
-        'field': 'Technology',  # Placeholder
-        'confidence': 0.0,
-        'note': 'Advanced topic modeling not yet implemented'
-    }
-    
-    # Page 7: Top 3 topics (placeholder - would need topic extraction)
+    # Page 6: Top 3 topics (placeholder - would need topic extraction)
     if analytics_result and analytics_result.get('all_topics'):
         # Group topics by their metrics to find most discussed
         all_topics = analytics_result['all_topics']
         # Sort by number of messages in topic (using difficulty as proxy for now)
         sorted_topics = sorted(all_topics, key=lambda x: x.get('metrics', {}).get('followup_count', 0), reverse=True)[:3]
         
-        insights[7] = {
+        insights[6] = {
             'type': 'top_topics',
             'topics': [
                 {
@@ -256,31 +225,25 @@ def extract_insights(compression_result: Dict[str, Any],
             ]
         }
     else:
-        insights[7] = {
+        insights[6] = {
             'type': 'top_topics',
             'topics': [],
             'note': 'Topic analysis not available'
         }
     
-    # Page 8: Topics per month (placeholder)
+    # Page 7: Topics per month (placeholder)
+    insights[7] = {
+        'data': {},
+    }
+    
+    # Page 8: Topics per hour (placeholder)
     insights[8] = {
-        'type': 'topics_per_month',
         'data': {},
-        'note': 'Advanced topic tracking not yet implemented'
     }
     
-    # Page 9: Topics per hour (placeholder)
+    # Page 9: Outro
     insights[9] = {
-        'type': 'topics_per_hour',
-        'data': {},
-        'note': 'Advanced topic tracking not yet implemented'
-    }
-    
-    # Page 10: Outro
-    insights[10] = {
-        'type': 'outro',
-        'message': 'Thanks for using GPT Rewind!',
-        'summary': {
+        'data': {
             'total_hours': yearly.get('total_hours', 0),
             'total_messages': yearly.get('total_messages', 0)
         }

@@ -7,6 +7,7 @@ This folder contains the machine learning pipeline for processing ChatGPT conver
 The pipeline consists of three main stages:
 
 1. **Conversation Compression** (`conversation_compression.py`)
+
    - Filters conversations from the last 12 months
    - Groups messages by month
    - Removes stopwords and cleans content
@@ -15,6 +16,7 @@ The pipeline consists of three main stages:
    - Estimates costs
 
 2. **Embedding Generation** (`embeddings.py`)
+
    - Generates embeddings using GTE-Large model
    - Optimized with GPU acceleration (CUDA)
    - Uses mixed precision (FP16) when available
@@ -66,12 +68,14 @@ python -m ml.pipeline input_files/user_id/user_id output_files/user_id
 ### Performance Settings
 
 **Embeddings & Analytics Disabled (Default)**
+
 - Fastest processing (~5-30 seconds)
 - Only basic analytics available
 - No GPU required
 - Suitable for production with large user base
 
 **Embeddings & Analytics Enabled**
+
 - Slower processing (~5-30 minutes depending on data size)
 - Full question difficulty analysis
 - Requires GPU for reasonable performance
@@ -93,11 +97,13 @@ result = run_pipeline(
 ## Dependencies
 
 Required packages (already in `requirements.txt`):
+
 - `torch` - PyTorch for deep learning
 - `transformers` - Hugging Face transformers for GTE-Large model
 - `numpy` - Numerical computing
 
 Optional:
+
 - `faiss` - For optimized similarity search (recommended for large datasets)
 
 ## Output Files
@@ -105,15 +111,18 @@ Optional:
 The pipeline generates several output files in the specified output directory:
 
 ### Always Generated
+
 - `insights/*.json` - One JSON file per page (-1 through 10) with frontend data
 - `compressed_conversations.json` - Cleaned and structured conversation data
 - `conversation_analytics.json` - Usage analytics and statistics
 - `conversations_with_msg_id.json` - All messages with IDs, grouped by month
 
 ### Generated with Embeddings Enabled
+
 - `embedded_conversations.json` - Conversations with embedding vectors
 
 ### Generated with Analytics Enabled
+
 - `segmented_conversations.json` - Conversations segmented by topic
 - `questions_analytics.json` - Hardest and easiest questions with metrics
 
@@ -131,6 +140,7 @@ Each insight file contains structured data for the frontend:
 ```
 
 Insight types:
+
 - `-1`: Introduction
 - `0`: Total hours
 - `1`: Hours by month
@@ -153,6 +163,7 @@ python test_integration.py
 ```
 
 This will:
+
 1. Use an existing input file from `input_files/`
 2. Run the pipeline
 3. Verify all outputs are generated correctly
@@ -161,17 +172,21 @@ This will:
 ## Performance Notes
 
 ### Memory Usage
+
 - Compression: ~100-500 MB
 - Embeddings: ~2-4 GB (depends on model and batch size)
 - Analytics: ~1-6 GB (shared memory for embeddings)
 
 ### Processing Time (approximate)
+
 - Compression: 5-30 seconds
 - Embeddings: 5-30 minutes (with GPU: ~2-5 minutes)
 - Analytics: 1-5 minutes
 
 ### GPU Acceleration
+
 The pipeline automatically detects and uses CUDA GPUs when available:
+
 - Embeddings: 5-10x faster with GPU
 - Uses FP16 precision on GPU for additional 2x speedup
 - Fallback to CPU if GPU not available
@@ -179,20 +194,26 @@ The pipeline automatically detects and uses CUDA GPUs when available:
 ## Troubleshooting
 
 ### Import Errors
+
 Make sure you're running from the backend directory:
+
 ```bash
 cd /path/to/gpt-rewind/backend
 python test_integration.py
 ```
 
 ### Out of Memory
+
 If you get OOM errors with embeddings/analytics enabled:
+
 1. Reduce batch size in `embeddings.py`
 2. Reduce number of workers in `question_analytics.py`
 3. Disable analytics if only basic stats are needed
 
 ### Model Download
+
 First run will download the GTE-Large model (~1.5 GB):
+
 - Model will be cached in `~/.cache/huggingface/`
 - Requires internet connection for first run
 - Subsequent runs use cached model
@@ -222,6 +243,7 @@ ml/pipeline.py
 ## Future Enhancements
 
 Potential improvements:
+
 - [ ] Topic modeling for profession detection
 - [ ] Advanced topic tracking over time
 - [ ] Sentiment analysis
