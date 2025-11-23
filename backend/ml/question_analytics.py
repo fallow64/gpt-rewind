@@ -579,29 +579,40 @@ def extract_raw_content(message: Dict[str, Any]) -> str:
             
     return ""
 
-def main():
+def analyze_questions(embedded_file: str, output_dir: str = '.', similarity_threshold: float = 0.65, num_workers: int = None):
+    """
+    Analyze question difficulty from embedded conversations.
+    
+    Args:
+        embedded_file: Path to embedded_conversations.json
+        output_dir: Directory to write output files to
+        similarity_threshold: Threshold for topic segmentation
+        num_workers: Number of worker processes (None for auto)
+    
+    Returns:
+        dict with output files and analysis results
+    """
     print("=" * 70)
     print("Question Difficulty Analyzer - WITH REAL SHARED MEMORY")
     print("=" * 70)
     print(f"CPUs available: {cpu_count()}")
     
-    input_file = 'embedded_conversations.json'
-    if not os.path.exists(input_file):
-        print(f"Error: {input_file} not found!")
-        return
+    if not os.path.exists(embedded_file):
+        print(f"Error: {embedded_file} not found!")
+        raise FileNotFoundError(embedded_file)
         
     try:
-        with open(input_file, 'r', encoding='utf-8') as f:
+        with open(embedded_file, 'r', encoding='utf-8') as f:
             embedded_data = json.load(f)
     except json.JSONDecodeError as e:
         print(f"Error: Invalid JSON: {e}")
-        return
+        raise
 
     # PHASE 1: Create Shared Memory
     embeddings_index, shm, embedding_dim, shape = create_shared_embeddings(embedded_data)
     
     if shm is None:
-        return
+        raise RuntimeError("Failed to create shared memory for embeddings")
 
     try:
         # PHASE 2: Segment Conversations
@@ -611,8 +622,8 @@ def main():
             embeddings_index,
             shm.name,
             shape,
-            similarity_threshold=0.65,
-            num_workers=12
+            similarity_threshold=similarity_threshold,
+            num_workers=num_workers if num_workers else 12
         )
         processing_time = (datetime.now() - start_time).total_seconds()
         
@@ -625,7 +636,7 @@ def main():
         print(f"✓ Easiest score: {easiest['difficulty_score']:.2f}" if easiest else "✗ No easiest found")
 
         # Save results
-        segmented_file = 'segmented_conversations.json'
+        segmented_file = os.path.join(output_dir, 'segmented_conversations.json')
         with open(segmented_file, 'w', encoding='utf-8') as f:
             json.dump(segmented_data, f, indent=2, ensure_ascii=False)
         print(f"✓ Saved {segmented_file}")
@@ -673,10 +684,35 @@ def main():
 
     # Save to new JSON file
     if extremes_data:
-        output_file = 'questions_analytics.json'
+        output_file = os.path.join(output_dir, 'questions_analytics.json')
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(extremes_data, f, indent=2, ensure_ascii=False)
         print(f"\n✓ Saved hardest and easiest questions to {output_file}")
+    
+    return {
+        'segmented_file': segmented_file,
+        'questions_file': output_file if extremes_data else None,
+        'hardest': hardest,
+        'easiest': easiest,
+        'all_topics': all_topics
+    }
+
+
+def main():
+    """Main entry point for command-line usage."""
+    import sys
+    
+    if len(sys.argv) > 1:
+        embedded_file = sys.argv[1]
+    else:
+        embedded_file = 'embedded_conversations.json'
+    
+    output_dir = sys.argv[2] if len(sys.argv) > 2 else '.'
+    
+    result = analyze_questions(embedded_file, output_dir)
+    print(f"✓ Analysis complete")
+    if result['questions_file']:
+        print(f"✓ Questions file: {result['questions_file']}")
 
 if __name__ == "__main__":
     main()

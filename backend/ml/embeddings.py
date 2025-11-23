@@ -194,24 +194,34 @@ def process_compressed_data(compressed_data: Dict[str, Any], embedder: GTELargeG
     return compressed_data
 
 
-def main():
+def generate_embeddings(compressed_file: str, output_file: str = None, batch_size: int = None):
+    """
+    Generate embeddings for compressed conversations.
+    
+    Args:
+        compressed_file: Path to compressed_conversations.json
+        output_file: Path to output embedded_conversations.json (optional)
+        batch_size: Batch size for processing (optional, auto-detected)
+    
+    Returns:
+        dict with output_file path and metadata
+    """
     print("=" * 60)
     print("Embedding Generator (GTE-Large) - OPTIMIZED")
     print("=" * 60)
     
     # Load compressed data
-    input_file = 'compressed_conversations.json'
-    print(f"Loading {input_file}...", flush=True)
+    print(f"Loading {compressed_file}...", flush=True)
     
     try:
-        with open(input_file, 'r', encoding='utf-8') as f:
+        with open(compressed_file, 'r', encoding='utf-8') as f:
             compressed_data = json.load(f)
     except FileNotFoundError:
-        print(f"Error: {input_file} not found!")
-        sys.exit(1)
+        print(f"Error: {compressed_file} not found!")
+        raise
     except json.JSONDecodeError as e:
         print(f"Error: Invalid JSON: {e}")
-        sys.exit(1)
+        raise
     
     # Verify message IDs are present
     sample_checked = False
@@ -237,10 +247,11 @@ def main():
         embedder = GTELargeGenerator(max_length=512)
     except Exception as e:
         print(f"Error initializing model: {e}")
-        sys.exit(1)
+        raise
     
     # Configure batch size
-    batch_size = 256 if torch.cuda.is_available() else 32
+    if batch_size is None:
+        batch_size = 256 if torch.cuda.is_available() else 32
     
     # Process data
     start_time = datetime.now()
@@ -266,7 +277,11 @@ def main():
     embedded_data['metadata']['embedding_precision'] = 'float16' if embedder.use_amp else 'float32'
     
     # Save output
-    output_file = 'embedded_conversations.json'
+    if output_file is None:
+        output_file = compressed_file.replace('compressed_', 'embedded_')
+        if output_file == compressed_file:
+            output_file = 'embedded_conversations.json'
+    
     print(f"\nSaving to {output_file}...", flush=True)
     
     with open(output_file, 'w', encoding='utf-8') as f:
@@ -279,6 +294,28 @@ def main():
     print(f"Time: {duration:.1f}s | Output: {output_file}")
     print(f"Message IDs: Preserved ✓")
     print("=" * 60)
+    
+    return {
+        'output_file': output_file,
+        'device': embedder.device,
+        'duration': duration,
+        'batch_size': batch_size
+    }
+
+
+def main():
+    """Main entry point for command-line usage."""
+    import sys
+    
+    if len(sys.argv) > 1:
+        compressed_file = sys.argv[1]
+    else:
+        compressed_file = 'compressed_conversations.json'
+    
+    output_file = sys.argv[2] if len(sys.argv) > 2 else None
+    
+    result = generate_embeddings(compressed_file, output_file)
+    print(f"✓ Embeddings saved to {result['output_file']}")
 
 
 if __name__ == '__main__':

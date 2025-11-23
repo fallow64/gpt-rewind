@@ -1,10 +1,16 @@
 import asyncio
 import base64
 import os
+import logging
 from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from generate_audio import transcribe_insight
+from ml.pipeline import run_pipeline
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 OUTPUT_FOLDER = "output_files"
 INPUT_FOLDER = "input_files"
@@ -20,25 +26,63 @@ app.add_middleware(
 )
 
 
-# placeholder for albert's function
 async def create_analyze_files(output_file_folder: str, conversation_file_path: str, random_id: str):
-    # for now just write empty json 0 to 10
-    insights_folder = os.path.join(output_file_folder, "insights")
-    os.makedirs(insights_folder, exist_ok=True)
-    for page_index in range(-1, 11):
-        insight_file_path = os.path.join(insights_folder, f"{page_index}.json")
-        with open(insight_file_path, "w") as f:
-            f.write("{}")
+    """
+    Process conversation file through ML pipeline and generate insights.
     
-    # read the resulting files and generate audio files
-    insight_data = None
-    for page_index in range(-1, 11):
-        insight_file_path = os.path.join(output_file_folder, "insights", f"{page_index}.json")
-        if os.path.exists(insight_file_path):
-            with open(insight_file_path, "r") as f:
-                insight_data = f.read()
-        # disable transcribing for now
-        # await transcribe_insight(user_id=random_id, insight=insight_data, page_index=page_index)
+    Args:
+        output_file_folder: Directory for output files
+        conversation_file_path: Path to uploaded conversation JSON file
+        random_id: User ID for this session
+    """
+    try:
+        logger.info(f"Starting ML pipeline for user {random_id}")
+        
+        # Run the ML pipeline
+        # Note: Embeddings and analytics are disabled by default for speed
+        # They can be enabled but require GPU and significant processing time
+        result = run_pipeline(
+            conversation_file=conversation_file_path,
+            output_dir=output_file_folder,
+            enable_embeddings=False,  # Set to True to enable (requires GPU, slow)
+            enable_analytics=False     # Set to True to enable (requires embeddings)
+        )
+        
+        if not result['success']:
+            logger.error(f"Pipeline failed for user {random_id}: {result['error']}")
+            # Create fallback empty insights
+            insights_folder = os.path.join(output_file_folder, "insights")
+            os.makedirs(insights_folder, exist_ok=True)
+            for page_index in range(-1, 11):
+                insight_file_path = os.path.join(insights_folder, f"{page_index}.json")
+                with open(insight_file_path, "w") as f:
+                    f.write('{"error": "Processing failed"}')
+            return
+        
+        logger.info(f"Pipeline completed successfully for user {random_id}")
+        
+        # Generate audio for insights (optional - currently disabled in original code)
+        # Uncomment to enable audio generation
+        """
+        insights_folder = os.path.join(output_file_folder, "insights")
+        for page_index in range(-1, 11):
+            insight_file_path = os.path.join(insights_folder, f"{page_index}.json")
+            if os.path.exists(insight_file_path):
+                with open(insight_file_path, "r") as f:
+                    insight_data = f.read()
+                await transcribe_insight(user_id=random_id, insight=insight_data, page_index=page_index)
+        """
+        
+    except Exception as e:
+        logger.exception(f"Error processing conversation for user {random_id}: {e}")
+        # Create error insights
+        insights_folder = os.path.join(output_file_folder, "insights")
+        os.makedirs(insights_folder, exist_ok=True)
+        for page_index in range(-1, 11):
+            insight_file_path = os.path.join(insights_folder, f"{page_index}.json")
+            with open(insight_file_path, "w") as f:
+                f.write('{"error": "Processing error"}')
+
 
 @app.post("/conversation")
 async def process_conversation(file: UploadFile = File(...)):

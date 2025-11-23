@@ -2,3 +2,8 @@ fastapi
 fastapi[standard]
 fish-audio-sdk
 python-multipart
+
+# ML Dependencies
+torch
+transformers
+numpy

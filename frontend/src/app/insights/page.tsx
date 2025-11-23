@@ -56,15 +56,10 @@ export default function InsightsPage() {
     },
     { key: "easiest-question", component: EasiestQuestionSlide, slide: 4 },
     { key: "hardest-question", component: HardestQuestionSlide, slide: 5 },
-    {
-      key: "estimated-profession",
-      component: EstimatedProfessionSlide,
-      slide: 6,
-    },
-    { key: "top-topics", component: YourTopTopicsSlide, slide: 7 },
-    { key: "topics-by-month", component: TopicsByMonthSlide, slide: 8 },
-    { key: "topics-by-hour", component: TopicsByHourSlide, slide: 9 },
-    { key: "outro", component: OutroSlide, slide: 10 },
+    { key: "top-topics", component: YourTopTopicsSlide, slide: 6 },
+    { key: "topics-by-month", component: TopicsByMonthSlide, slide: 7 },
+    { key: "topics-by-hour", component: TopicsByHourSlide, slide: 8 },
+    { key: "outro", component: OutroSlide, slide: 9 },
   ];
 
   const postcards: ReactNode[] = slides.map(

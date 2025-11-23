@@ -16,6 +16,7 @@ This script processes ChatGPT conversation exports and:
 
 import json
 import re
+import os
 from datetime import datetime, timedelta
 from collections import defaultdict
 from multiprocessing import Pool, cpu_count
@@ -379,12 +380,21 @@ def create_conversations_with_msg_id(all_conversation_data: List[Tuple[str, List
     return dict(messages_by_month)
 
 
-def main():
+def process_conversations(input_file: str, output_dir: str = '.'):
+    """
+    Process conversations from input file and generate output files.
+    
+    Args:
+        input_file: Path to conversations.json file
+        output_dir: Directory to write output files to (default: current directory)
+    
+    Returns:
+        dict with paths to generated files and analytics
+    """
     print("ChatGPT Conversation History Compression & Analysis Tool")
     print("=" * 60)
     
     # Load conversations.json
-    input_file = 'conversations.json'
     try:
         print(f"\nLoading {input_file}...")
         with open(input_file, 'r', encoding='utf-8') as f:
@@ -392,10 +402,10 @@ def main():
         print(f"Loaded {len(conversations)} conversations")
     except FileNotFoundError:
         print(f"Error: {input_file} not found!")
-        sys.exit(1)
+        raise
     except json.JSONDecodeError as e:
         print(f"Error: Invalid JSON in {input_file}: {e}")
-        sys.exit(1)
+        raise
     
     # Calculate cutoff date (12 months ago)
     cutoff_date = datetime.now() - timedelta(days=365)
@@ -414,13 +424,18 @@ def main():
     
     if not all_conversation_data:
         print("No conversations found in the specified time range!")
-        sys.exit(0)
+        return {
+            'compressed_file': None,
+            'analytics_file': None,
+            'msg_id_file': None,
+            'analytics': None
+        }
     
     # Step 2: Create conversations_with_msg_id.json
     print("\nCreating conversations_with_msg_id structure...")
     messages_by_month = create_conversations_with_msg_id(all_conversation_data)
     
-    msg_id_file = 'conversations_with_msg_id.json'
+    msg_id_file = os.path.join(output_dir, 'conversations_with_msg_id.json')
     print(f"Writing to {msg_id_file}...")
     
     # Count total messages
@@ -487,7 +502,7 @@ def main():
     }
     
     # Step 7: Write compressed output
-    output_file = 'compressed_conversations.json'
+    output_file = os.path.join(output_dir, 'compressed_conversations.json')
     print(f"\nWriting compressed output to {output_file}...")
     
     with open(output_file, 'w', encoding='utf-8') as f:
@@ -495,7 +510,7 @@ def main():
     print(f"✓ Saved {output_file}")
     
     # Step 8: Write analytics output
-    analytics_file = 'conversation_analytics.json'
+    analytics_file = os.path.join(output_dir, 'conversation_analytics.json')
     print(f"Writing analytics to {analytics_file}...")
     
     with open(analytics_file, 'w', encoding='utf-8') as f:
@@ -548,6 +563,32 @@ def main():
             print(f"  Peak hour: {stats['peak_hour']['hour_of_day']:02d}:00 ({stats['peak_hour']['message_count']:,} messages)")
     
     print("\n" + "=" * 60)
+
+
+    return {
+        'compressed_file': output_file,
+        'analytics_file': analytics_file,
+        'msg_id_file': msg_id_file,
+        'analytics': analytics
+    }
+
+
+def main():
+    """Main entry point for command-line usage."""
+    import sys
+    
+    if len(sys.argv) > 1:
+        input_file = sys.argv[1]
+    else:
+        input_file = 'conversations.json'
+    
+    result = process_conversations(input_file)
+    
+    if result['compressed_file']:
+        print(f"✓ Successfully processed conversations")
+        print(f"✓ Compressed file: {result['compressed_file']}")
+        print(f"✓ Analytics file: {result['analytics_file']}")
+        print(f"✓ Message ID file: {result['msg_id_file']}")
 
 
 if __name__ == '__main__':
