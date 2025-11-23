@@ -1,0 +1,4 @@
+fastapi
+fastapi[standard]
+fish-audio-sdk
+python-multipart
