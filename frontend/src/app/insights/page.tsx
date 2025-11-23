@@ -5,20 +5,17 @@ import NextButton from "@/src/components/layout/NextButton";
 import AnimatedPostcardStack from "@/src/components/postcard/AnimatedPostcardStack";
 import PostcardStack from "@/src/components/postcard/PostcardStack";
 import EasiestQuestionSlide from "@/src/components/slides/EasiestQuestionSlide";
-import EstimatedProfessionSlide from "@/src/components/slides/EstimatedProfessionSlide";
 import HardestQuestionSlide from "@/src/components/slides/HardestQuestionSlide";
 import IntroSlide from "@/src/components/slides/IntroSlide";
-import YourLongestConversationSlide from "@/src/components/slides/YourLongestConversationSlide";
 import MonthlyActivitySlide from "@/src/components/slides/MonthlyActivitySlide";
-import WhenYouChatSlide from "@/src/components/slides/WhenYouChatSlide";
-import YourTopTopicsSlide from "@/src/components/slides/YourTopTopicsSlide";
+import OutroSlide from "@/src/components/slides/OutroSlide";
 import TopicsByHourSlide from "@/src/components/slides/TopicsByHourSlide";
 import TopicsByMonthSlide from "@/src/components/slides/TopicsByMonthSlide";
+import WhenYouChatSlide from "@/src/components/slides/WhenYouChatSlide";
 import YearlyHoursSlide from "@/src/components/slides/YearlyHoursSlide";
-import OutroSlide from "@/src/components/slides/OutroSlide";
+import YourLongestConversationSlide from "@/src/components/slides/YourLongestConversationSlide";
+import YourTopTopicsSlide from "@/src/components/slides/YourTopTopicsSlide";
 import { SlideDataProvider } from "@/src/contexts/SlideDataContext";
-import { useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
 import { ReactNode, Suspense, useEffect, useState } from "react";
 import { DEFAULT_BACKGROUND_CARDS, POSTCARD_CONFIG } from "../../types";
 
@@ -29,7 +26,11 @@ const LoadingSlide = () => (
 );
 
 export default function InsightsPage() {
-  const { data: session, status } = useSession();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [direction, setDirection] = useState<"forward" | "backward">("forward");
@@ -77,13 +78,6 @@ export default function InsightsPage() {
     }
   );
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      redirect("/");
-    }
-  }, [status]);
-
   const handleBack = () => {
     if (isAnimating) return;
     setDirection("backward");
@@ -110,17 +104,7 @@ export default function InsightsPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isAnimating, currentIndex]);
 
-  // Show loading state while checking auth
-  if (status === "loading") {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-linear-to-br from-gray-950 via-gray-900 to-black">
-        <div className="text-white text-2xl">Loading...</div>
-      </div>
-    );
-  }
-
-  // Don't render if not authenticated (will redirect)
-  if (!session) {
+  if (!isMounted) {
     return null;
   }
 

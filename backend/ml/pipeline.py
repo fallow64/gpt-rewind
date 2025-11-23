@@ -290,13 +290,22 @@ if __name__ == '__main__':
     import sys
     
     if len(sys.argv) < 2:
-        print("Usage: python -m ml.pipeline <conversation_file> [output_dir]")
+        print("Usage: python -m ml.pipeline <conversation_file> [output_dir] [--no-embeddings] [--no-analytics]")
         sys.exit(1)
     
     conversation_file = sys.argv[1]
-    output_dir = sys.argv[2] if len(sys.argv) > 2 else './output'
+    output_dir = sys.argv[2] if len(sys.argv) > 2 and not sys.argv[2].startswith('--') else './output'
     
-    result = run_pipeline(conversation_file, output_dir)
+    # Parse flags
+    enable_embeddings = '--no-embeddings' not in sys.argv
+    enable_analytics = '--no-analytics' not in sys.argv
+    
+    result = run_pipeline(
+        conversation_file, 
+        output_dir,
+        enable_embeddings=enable_embeddings,
+        enable_analytics=enable_analytics
+    )
     
     if result['success']:
         print("\n✓ Pipeline completed successfully!")

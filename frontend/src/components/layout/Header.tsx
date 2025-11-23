@@ -1,5 +1,3 @@
-import AuthSection from "../auth/AuthSection";
-
 function Header() {
   return (
     <div className="w-full bg-gray-800 text-white text-2xl flex items-center justify-between">
@@ -18,8 +16,6 @@ function Header() {
           <span>made with &lt;3 for MadHacks 2025</span> <br />
           <span className="ml-4">by Albert, Austin, and Geet</span>
         </div>
-
-        <AuthSection />
       </div>
     </div>
   );

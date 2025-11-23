@@ -17,7 +17,7 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor
 from transformers import AutoTokenizer, AutoModel
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 import sys
 from datetime import datetime
 
@@ -33,7 +33,7 @@ class GTELargeGenerator:
     
     def __init__(self, model_name: str = "thenlper/gte-large", max_length: int = 512):
         """Initialize GTE-Large model with optimizations."""
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
         self.use_amp = self.device == 'cuda'  # Use mixed precision on GPU
         
         print(f"Device: {self.device}", end='')
@@ -194,7 +194,7 @@ def process_compressed_data(compressed_data: Dict[str, Any], embedder: GTELargeG
     return compressed_data
 
 
-def generate_embeddings(compressed_file: str, output_file: str = None, batch_size: int = None):
+def generate_embeddings(compressed_file: str, output_file: Optional[str] = None, batch_size: Optional[int] = None, device: Optional[str] = None):
     """
     Generate embeddings for compressed conversations.
     
@@ -202,6 +202,7 @@ def generate_embeddings(compressed_file: str, output_file: str = None, batch_siz
         compressed_file: Path to compressed_conversations.json
         output_file: Path to output embedded_conversations.json (optional)
         batch_size: Batch size for processing (optional, auto-detected)
+        device: Device to use ('cuda', 'cpu', 'mps'). If None, auto-detects.
     
     Returns:
         dict with output_file path and metadata
@@ -244,7 +245,7 @@ def generate_embeddings(compressed_file: str, output_file: str = None, batch_siz
     
     # Initialize embedder
     try:
-        embedder = GTELargeGenerator(max_length=512)
+        embedder = GTELargeGenerator(max_length=512, device=device)
     except Exception as e:
         print(f"Error initializing model: {e}")
         raise

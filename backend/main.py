@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import os
+import json
 import logging
 from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.responses import FileResponse
@@ -115,7 +116,7 @@ async def get_insights_for_page(random_id, page_index):
     file_path = os.path.join(OUTPUT_FOLDER, random_id, "insights", f"{page_index}.json")
     if os.path.exists(file_path):
         with open(file_path, "r") as f:
-            data = f.read()
+            data = json.load(f)  # Parse JSON instead of reading as string
         return data
     else:
         # couldn't find the file, 404

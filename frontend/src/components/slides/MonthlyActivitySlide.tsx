@@ -22,21 +22,6 @@ ChartJS.register(
   Legend
 );
 
-const MONTH_LABELS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
 export default function MonthlyActivitySlide() {
   const { data, error } = useSlide();
 
@@ -44,16 +29,12 @@ export default function MonthlyActivitySlide() {
     throw error;
   }
 
-  // Data is guaranteed to exist when component renders due to Suspense
-  const monthlyHours = data.monthlyHours || Array(12).fill(0);
-
   const chartData = useMemo(
     () => ({
-      labels: MONTH_LABELS,
       datasets: [
         {
           label: "Hours per Month",
-          data: monthlyHours,
+          data: data,
           backgroundColor: "#a78bfa",
           borderColor: "#8b5cf6",
           borderWidth: 2,
@@ -62,7 +43,7 @@ export default function MonthlyActivitySlide() {
         },
       ],
     }),
-    [monthlyHours]
+    [data]
   );
 
   const options = useMemo(
@@ -121,6 +102,28 @@ export default function MonthlyActivitySlide() {
             font: {
               size: 13,
               weight: 600,
+            },
+            callback: function (value: any, index: number) {
+              const label = chartData.datasets[0].data[index]?.x;
+              if (typeof label === "string") {
+                const [, month] = label.split("-");
+                const monthNames = [
+                  "Jan",
+                  "Feb",
+                  "Mar",
+                  "Apr",
+                  "May",
+                  "Jun",
+                  "Jul",
+                  "Aug",
+                  "Sep",
+                  "Oct",
+                  "Nov",
+                  "Dec",
+                ];
+                return monthNames[parseInt(month) - 1];
+              }
+              return label;
             },
           },
           grid: {

@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useState, ReactNode, use } from "react";
 import { useConversation } from "./ConversationContext";
-import { redirect } from "next/navigation";
 
 interface SlideDataContextType {
   data: any;
@@ -37,7 +36,8 @@ function fetchSlideData(conversationId: string, slide: number): Promise<any> {
         `Failed to fetch slide data: ${response.statusText}. Index: ${slide}`
       );
     }
-    return response.json();
+    const json = await response.json();
+    return json.data;
   });
 
   promiseCache.set(cacheKey, promise);
@@ -47,13 +47,7 @@ function fetchSlideData(conversationId: string, slide: number): Promise<any> {
 export function SlideDataProvider({ slide, children }: SlideDataProviderProps) {
   const { conversationId } = useConversation();
 
-  if (!conversationId) {
-    console.error("No conversation ID found in SlideDataProvider");
-    alert("No conversation found. Redirecting to home.");
-    redirect("/");
-  }
-
-  const [dataPromise] = useState(() => fetchSlideData(conversationId, slide));
+  const [dataPromise] = useState(() => fetchSlideData(conversationId!, slide));
   const [error, setError] = useState<Error | null>(null);
 
   // Use React's use() hook to unwrap the promise - this integrates with Suspense

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "../components/layout/Header";
-import SessionProvider from "../components/auth/SessionProvider";
 import { ConversationProvider } from "../contexts/ConversationContext";
 
 export const metadata: Metadata = {
@@ -17,12 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <SessionProvider>
-          <ConversationProvider>
-            <Header />
-            {children}
-          </ConversationProvider>
-        </SessionProvider>
+        <ConversationProvider>
+          <Header />
+          {children}
+        </ConversationProvider>
       </body>
     </html>
   );

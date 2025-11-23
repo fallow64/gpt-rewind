@@ -1,19 +1,16 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useConversation } from "@/src/contexts/ConversationContext";
 import ProgressIndicator from "@/src/components/workflow/ProgressIndicator";
 import StepLabels from "@/src/components/workflow/StepLabels";
-import SignInStep from "@/src/components/workflow/SignInStep";
 import UploadStep from "@/src/components/workflow/UploadStep";
 import ProcessStep from "@/src/components/workflow/ProcessStep";
 import ProcessingState from "@/src/components/workflow/ProcessingState";
 import LoadingState from "@/src/components/workflow/LoadingState";
 
 export default function Home() {
-  const { data: session, status } = useSession();
   const router = useRouter();
   const { setConversationId } = useConversation();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -71,11 +68,6 @@ export default function Home() {
     }
   };
 
-  // Update step based on authentication
-  if (status === "authenticated" && currentStep === 1) {
-    setCurrentStep(2);
-  }
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-linear-to-br from-gray-950 via-gray-900 to-black text-white p-8">
       <div className="max-w-4xl mx-auto w-full space-y-8">
@@ -86,20 +78,17 @@ export default function Home() {
           </p>
         </div>
 
-        <ProgressIndicator currentStep={currentStep} totalSteps={4} />
+        <ProgressIndicator currentStep={currentStep} totalSteps={3} />
 
         {/* Step Content */}
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 min-h-[300px] flex flex-col items-center justify-center">
-          {/* Step 1: Login */}
-          {currentStep === 1 && <SignInStep />}
-
-          {/* Step 2: Upload */}
-          {currentStep === 2 && !uploadedFile && (
+          {/* Step 1: Upload */}
+          {currentStep === 1 && !uploadedFile && (
             <UploadStep onFileUpload={handleFileUpload} />
           )}
 
-          {/* Step 3: Process */}
-          {currentStep === 3 && !isProcessing && uploadedFile && (
+          {/* Step 2: Process */}
+          {currentStep === 2 && !isProcessing && uploadedFile && (
             <ProcessStep
               fileName={uploadedFile.name}
               onChangeFile={() => {
@@ -112,9 +101,6 @@ export default function Home() {
 
           {/* Processing State */}
           {isProcessing && <ProcessingState />}
-
-          {/* Loading state for initial auth check */}
-          {status === "loading" && <LoadingState />}
         </div>
 
         <StepLabels currentStep={currentStep} steps={stepLabels} />
