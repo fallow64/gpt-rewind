@@ -45,8 +45,8 @@ async def create_analyze_files(output_file_folder: str, conversation_file_path: 
         result = run_pipeline(
             conversation_file=conversation_file_path,
             output_dir=output_file_folder,
-            enable_embeddings=True,  # Set to True to enable (requires GPU, slow)
-            enable_analytics=True     # Set to True to enable (requires embeddings)
+            enable_embeddings=False,  # Set to True to enable (requires GPU, slow)
+            enable_analytics=False     # Set to True to enable (requires embeddings)
         )
         
         if not result['success']:
@@ -64,15 +64,13 @@ async def create_analyze_files(output_file_folder: str, conversation_file_path: 
         
         # Generate audio for insights (optional - currently disabled in original code)
         # Uncomment to enable audio generation
-        """
-        insights_folder = os.path.join(output_file_folder, "insights")
-        for page_index in range(-1, 11):
-            insight_file_path = os.path.join(insights_folder, f"{page_index}.json")
-            if os.path.exists(insight_file_path):
-                with open(insight_file_path, "r") as f:
-                    insight_data = f.read()
-                await transcribe_insight(user_id=random_id, insight=insight_data, page_index=page_index)
-        """
+        # insights_folder = os.path.join(output_file_folder, "insights")
+        # for page_index in range(-1, 11):
+        #     insight_file_path = os.path.join(insights_folder, f"{page_index}.json")
+        #     if os.path.exists(insight_file_path):
+        #         with open(insight_file_path, "r") as f:
+        #             insight_data = f.read()
+        #         await transcribe_insight(user_id=random_id, insight=insight_data, page_index=page_index)
         
     except Exception as e:
         logger.exception(f"Error processing conversation for user {random_id}: {e}")
@@ -87,8 +85,8 @@ async def create_analyze_files(output_file_folder: str, conversation_file_path: 
 
 @app.post("/conversation")
 async def process_conversation(file: UploadFile = File(...)):
-    random_id = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8')
-    # random_id = "abc"
+    # random_id = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8')
+    random_id = "abc"
 
     # create user folder
     output_user_folder = os.path.join(OUTPUT_FOLDER, random_id)

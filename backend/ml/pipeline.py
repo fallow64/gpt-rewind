@@ -89,7 +89,7 @@ def run_pipeline(conversation_file: str, output_dir: str,
             try:
                 embedding_result = generate_embeddings(
                     compression_result['compressed_file'],
-                    output_file=os.path.join(output_dir, 'embedded_conversations.json')
+                    os.path.join(output_dir, 'embedded_conversations.json')
                 )
                 result['embedding_result'] = embedding_result
                 print(f"✓ Embeddings complete: {embedding_result['output_file']}")
@@ -216,81 +216,102 @@ def extract_insights(compression_result: Dict[str, Any],
             'data': 'Analysis not available',
         }
     
-    # Page 6: Top 3 topics (placeholder - would need topic extraction)
+    # Page 6: Top 3 topics by followup count
     if analytics_result and analytics_result.get('all_topics'):
-        # Group topics by their metrics to find most discussed
         all_topics = analytics_result['all_topics']
-        # Sort by number of messages in topic (using difficulty as proxy for now)
+        # Sort by followup count (number of back-and-forth exchanges)
         sorted_topics = sorted(all_topics, key=lambda x: x.get('metrics', {}).get('followup_count', 0), reverse=True)[:3]
+        
+        # Get the actual question text for each top topic
+        top_topics_data = []
+        for topic in sorted_topics:
+            # Try to get the question text from the topic
+            question_id = topic.get('question_id', '')
+            topic_desc = f"Topic {topic.get('topic_id', '?')} (Score: {topic.get('difficulty_score', 0):.1f})"
+            if question_id:
+                topic_desc = f"{topic.get('conv_id', 'Unknown')[:8]}... - {topic.get('metrics', {}).get('followup_count', 0)} exchanges"
+            top_topics_data.append(topic_desc)
         
         insights[6] = {
             'type': 'top_topics',
-            'data': [sorted_topics[i].get('text', '') for i in range(len(sorted_topics))],
-            # 'data': [
-            #     {
-            #         'rank': i + 1,
-            #         'description': f"Topic {i + 1}",
-            #         'message_count': topic.get('metrics', {}).get('followup_count', 0)
-            #     }
-            #     for i, topic in enumerate(sorted_topics)
-            # ]
+            'data': top_topics_data if top_topics_data else ['No topics', 'available', 'yet'],
         }
     else:
         insights[6] = {
             'type': 'top_topics',
-            'data': ['First', 'Second', 'Third'],
+            'data': ['Analysis not run', 'Enable embeddings', 'to see topics'],
         }
     
-    # Page 7: Topics per month (placeholder)
-    insights[7] = {
-        'type': 'topics_by_month',
-        'data': {
-            '2024-11': 'Topic A',
-            '2024-12': 'Topic B',
-            '2025-01': 'Topic C',
-            '2025-02': 'Topic D',
-            '2025-03': 'Topic E',
-            '2025-04': 'Topic F',
-            '2025-05': 'Topic G',
-            '2025-06': 'Topic H',
-            '2025-07': 'Topic I',
-            '2025-08': 'Topic J',
-            '2025-09': 'Topic K',
-            '2025-10': 'Topic L',
-            '2025-11': 'Topic M',
-        },
-    }
+    # Page 7: Most discussed topic per month
+    if analytics_result and analytics_result.get('all_topics'):
+        all_topics = analytics_result['all_topics']
+        
+        # Group topics by month
+        topics_by_month = {}
+        for topic in all_topics:
+            month = topic.get('month', 'Unknown')
+            if month not in topics_by_month:
+                topics_by_month[month] = []
+            topics_by_month[month].append(topic)
+        
+        # Get the most discussed topic per month (highest followup count)
+        most_discussed_per_month = {}
+        for month, month_topics in topics_by_month.items():
+            if month_topics:
+                top_topic = max(month_topics, key=lambda t: t.get('metrics', {}).get('followup_count', 0))
+                # Create a description of the topic
+                followup_count = top_topic.get('metrics', {}).get('followup_count', 0)
+                difficulty = top_topic.get('difficulty_score', 0)
+                most_discussed_per_month[month] = f"Difficulty {difficulty:.0f} ({followup_count} exchanges)"
+        
+        insights[7] = {
+            'type': 'topics_by_month',
+            'data': most_discussed_per_month if most_discussed_per_month else {'No data': 'No topics found'},
+        }
+    else:
+        insights[7] = {
+            'type': 'topics_by_month',
+            'data': {'No data': 'Analysis not run - enable embeddings'},
+        }
     
-    # Page 8: Topics per hour (placeholder)
-    insights[8] = {
-        'type': 'topics_by_hour',
-        'data': {
-            0: 'Topic X',
-            1: 'Topic Y',
-            2: 'Topic Z',
-            3: 'Topic AA',
-            4: 'Topic AB',
-            5: 'Topic AC',
-            6: 'Topic AD',
-            7: 'Topic AE',
-            8: 'Topic AF',
-            9: 'Topic AG',
-            10: 'Topic AH',
-            11: 'Topic AI',
-            12: 'Topic AJ',
-            13: 'Topic AK',
-            14: 'Topic AL',
-            15: 'Topic AM',
-            16: 'Topic AN',
-            17: 'Topic AO',
-            18: 'Topic AP',
-            19: 'Topic AQ',
-            20: 'Topic AR',
-            21: 'Topic AS',
-            22: 'Topic AT',
-            23: 'Topic AU',
-        },
-    }
+    # Page 8: Average topic difficulty by hour of day
+    if analytics_result and analytics_result.get('all_topics'):
+        from datetime import datetime as dt
+        from collections import defaultdict
+        
+        all_topics = analytics_result['all_topics']
+        
+        # Group topics by hour of day
+        topics_by_hour = defaultdict(list)
+        for topic in all_topics:
+            timestamp = topic.get('timestamp', '')
+            if timestamp:
+                try:
+                    ts = dt.fromisoformat(timestamp.replace('Z', '+00:00'))
+                    hour = ts.hour
+                    topics_by_hour[hour].append(topic)
+                except:
+                    pass
+        
+        # Calculate average difficulty per hour
+        avg_difficulty_by_hour = {}
+        for hour in range(24):
+            if hour in topics_by_hour and topics_by_hour[hour]:
+                topics = topics_by_hour[hour]
+                avg_diff = sum(t.get('difficulty_score', 0) for t in topics) / len(topics)
+                avg_difficulty_by_hour[hour] = f"Avg difficulty: {avg_diff:.1f} ({len(topics)} topics)"
+            else:
+                avg_difficulty_by_hour[hour] = "No topics"
+        
+        insights[8] = {
+            'type': 'topics_by_hour',
+            'data': avg_difficulty_by_hour,
+        }
+    else:
+        insights[8] = {
+            'type': 'topics_by_hour',
+            'data': {hour: 'Analysis not run' for hour in range(24)},
+        }
     
     # Page 9: Outro
     insights[9] = {

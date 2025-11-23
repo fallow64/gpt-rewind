@@ -579,8 +579,109 @@ def extract_raw_content(message: Dict[str, Any]) -> str:
             
     return ""
 
+def main():
+    print("=" * 70)
+    print("Question Difficulty Analyzer - WITH REAL SHARED MEMORY")
+    print("=" * 70)
+    print(f"CPUs available: {cpu_count()}")
+    
+    input_file = 'embedded_conversations.json'
+    if not os.path.exists(input_file):
+        print(f"Error: {input_file} not found!")
+        return
+        
+    try:
+        with open(input_file, 'r', encoding='utf-8') as f:
+            embedded_data = json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"Error: Invalid JSON: {e}")
+        return
+
+    # PHASE 1: Create Shared Memory
+    embeddings_index, shm, embedding_dim, shape = create_shared_embeddings(embedded_data)
+    
+    if shm is None:
+        return
+
+    try:
+        # PHASE 2: Segment Conversations
+        start_time = datetime.now()
+        segmented_data, all_topics = process_all_conversations(
+            embedded_data,
+            embeddings_index,
+            shm.name,
+            shape,
+            similarity_threshold=0.65,
+            num_workers=12
+        )
+        processing_time = (datetime.now() - start_time).total_seconds()
+        
+        print(f"✓ Processing completed in {processing_time:.2f}s")
+        print(f"✓ Total topics identified: {len(all_topics):,}")
+
+        # PHASE 3: Rank
+        hardest, easiest = find_hardest_and_easiest(all_topics)
+        print(f"✓ Hardest score: {hardest['difficulty_score']:.2f}" if hardest else "✗ No hardest found")
+        print(f"✓ Easiest score: {easiest['difficulty_score']:.2f}" if easiest else "✗ No easiest found")
+
+        # Save results
+        segmented_file = 'segmented_conversations.json'
+        with open(segmented_file, 'w', encoding='utf-8') as f:
+            json.dump(segmented_data, f, indent=2, ensure_ascii=False)
+        print(f"✓ Saved {segmented_file}")
+
+    finally:
+        # PHASE 4: Cleanup (Guaranteed execution)
+        print("\nCleaning up shared memory...")
+        shm.close()
+        shm.unlink()
+        print("✓ Shared memory released.")
+        gc.collect()
+
+    # PHASE 5: Retrieve Raw Messages (Post-cleanup)
+    print("\n" + "=" * 70)
+    print("PHASE 5: Sample Results & Export")
+    print("=" * 70)
+    
+    extremes_data = {}
+
+    if hardest:
+        raw_msg = search_message_by_id(embedded_data, hardest['question_id'])
+        q_text = extract_raw_content(raw_msg)
+        print(f"\n[HARDEST QUESTION]\n{q_text[:200]}...")
+        
+        extremes_data['hardest'] = {
+            'score': hardest['difficulty_score'],
+            'metrics': hardest['metrics'],
+            'question_id': hardest['question_id'],
+            'text': q_text,
+            'full_message': raw_msg
+        }
+        
+    if easiest:
+        raw_msg = search_message_by_id(embedded_data, easiest['question_id'])
+        q_text = extract_raw_content(raw_msg)
+        print(f"\n[EASIEST QUESTION]\n{q_text[:200]}...")
+
+        extremes_data['easiest'] = {
+            'score': easiest['difficulty_score'],
+            'metrics': easiest['metrics'],
+            'question_id': easiest['question_id'],
+            'text': q_text,
+            'full_message': raw_msg
+        }
+
+    # Save to new JSON file
+    if extremes_data:
+        output_file = 'questions_analytics.json'
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(extremes_data, f, indent=2, ensure_ascii=False)
+        print(f"\n✓ Saved hardest and easiest questions to {output_file}")
+
+
 def analyze_questions(embedded_file: str, output_dir: str = '.', similarity_threshold: float = 0.65, num_workers: int = None):
     """
+    Wrapper function for pipeline integration.
     Analyze question difficulty from embedded conversations.
     
     Args:
@@ -590,7 +691,12 @@ def analyze_questions(embedded_file: str, output_dir: str = '.', similarity_thre
         num_workers: Number of worker processes (None for auto)
     
     Returns:
-        dict with output files and analysis results
+        dict with output files and analysis results including:
+        - segmented_file: Path to segmented conversations
+        - questions_file: Path to questions analytics JSON
+        - hardest: Dict with hardest question data (includes 'text' field)
+        - easiest: Dict with easiest question data (includes 'text' field)
+        - all_topics: List of all topic dicts
     """
     print("=" * 70)
     print("Question Difficulty Analyzer - WITH REAL SHARED MEMORY")
@@ -689,6 +795,7 @@ def analyze_questions(embedded_file: str, output_dir: str = '.', similarity_thre
             json.dump(extremes_data, f, indent=2, ensure_ascii=False)
         print(f"\n✓ Saved hardest and easiest questions to {output_file}")
     
+    # Return data with the extremes_data (which includes 'text' field)
     return {
         'segmented_file': segmented_file,
         'questions_file': output_file if extremes_data else None,
@@ -697,22 +804,6 @@ def analyze_questions(embedded_file: str, output_dir: str = '.', similarity_thre
         'all_topics': all_topics
     }
 
-
-def main():
-    """Main entry point for command-line usage."""
-    import sys
-    
-    if len(sys.argv) > 1:
-        embedded_file = sys.argv[1]
-    else:
-        embedded_file = 'embedded_conversations.json'
-    
-    output_dir = sys.argv[2] if len(sys.argv) > 2 else '.'
-    
-    result = analyze_questions(embedded_file, output_dir)
-    print(f"✓ Analysis complete")
-    if result['questions_file']:
-        print(f"✓ Questions file: {result['questions_file']}")
 
 if __name__ == "__main__":
     main()

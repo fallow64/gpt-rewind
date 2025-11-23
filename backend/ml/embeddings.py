@@ -17,7 +17,7 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor
 from transformers import AutoTokenizer, AutoModel
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 import sys
 from datetime import datetime
 
@@ -34,7 +34,7 @@ class GTELargeGenerator:
     def __init__(self, model_name: str = "thenlper/gte-large", max_length: int = 512):
         """Initialize GTE-Large model with optimizations."""
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.use_amp = self.device == 'cuda' # Use automatic mixed precision on CUDA
+        self.use_amp = self.device == 'cuda'  # Use mixed precision on GPU
         
         print(f"Device: {self.device}", end='')
         if self.device == 'cuda':
@@ -192,36 +192,139 @@ def process_compressed_data(compressed_data: Dict[str, Any], embedder: GTELargeG
     compressed_data = apply_embeddings_to_data(compressed_data, all_locations, all_embeddings)
     
     return compressed_data
+import os
 
-
-def generate_embeddings(compressed_file: str, output_file: Optional[str] = None, batch_size: Optional[int] = None):
+def generate_embeddings(input_file: str, output_dir: str = '.'):
     """
-    Generate embeddings for compressed conversations.
+    Wrapper function for pipeline integration.
+    Generate embeddings for conversations using GTE-Large model.
     
     Args:
-        compressed_file: Path to compressed_conversations.json
-        output_file: Path to output embedded_conversations.json (optional)
-        batch_size: Batch size for processing (optional, auto-detected)
+        input_file: Path to conversations_with_msg_id.json
+        output_dir: Directory to write output file to
     
     Returns:
-        dict with output_file path and metadata
+        dict with:
+        - output_file: Path to embedded conversations JSON
+        - num_messages: Number of messages embedded
+        - duration_seconds: Time taken to generate embeddings
     """
     print("=" * 60)
     print("Embedding Generator (GTE-Large) - OPTIMIZED")
     print("=" * 60)
     
-    # Load compressed data
-    print(f"Loading {compressed_file}...", flush=True)
+    # Load compressed data (actually using conversations_with_msg_id.json)
+    print(f"Loading {input_file}...", flush=True)
     
     try:
-        with open(compressed_file, 'r', encoding='utf-8') as f:
-            compressed_data = json.load(f)
+        with open(input_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
     except FileNotFoundError:
-        print(f"Error: {compressed_file} not found!")
-        raise
+        print(f"Error: {input_file} not found!")
+        raise FileNotFoundError(f"{input_file} not found. Please run conversation_compression.py first.")
     except json.JSONDecodeError as e:
         print(f"Error: Invalid JSON: {e}")
         raise
+    
+    # Verify message IDs are present
+    sample_checked = False
+    for month in list(data.get('by_month', {}).keys())[:1]:
+        for conv_id in list(data['by_month'][month].keys())[:1]:
+            for msg_group in data['by_month'][month][conv_id][:1]:
+                for msg in msg_group[:1]:
+                    if 'id' in msg:
+                        print(f"✓ Message IDs detected (sample: {msg['id'][:30]}...)")
+                        sample_checked = True
+                    else:
+                        print("⚠ Warning: No message IDs found in data")
+                    break
+                if sample_checked:
+                    break
+            if sample_checked:
+                break
+        if sample_checked:
+            break
+    
+    # Initialize embedder
+    try:
+        embedder = GTELargeGenerator(max_length=512)
+    except Exception as e:
+        print(f"Error initializing model: {e}")
+        raise
+    
+    # Configure batch size
+    batch_size = 256 if torch.cuda.is_available() else 32
+    
+    # Process data
+    start_time = datetime.now()
+    print(f"\nStarted: {start_time.strftime('%H:%M:%S')}")
+    print("-" * 60)
+    
+    embedded_data = process_compressed_data(data, embedder, batch_size=batch_size)
+    
+    end_time = datetime.now()
+    duration = (end_time - start_time).total_seconds()
+    
+    print("-" * 60)
+    print(f"Completed: {end_time.strftime('%H:%M:%S')}")
+    print(f"Duration: {duration:.1f}s ({duration/60:.1f} min)")
+    
+    # Add embedding metadata
+    embedded_data['metadata']['embedding_model'] = 'thenlper/gte-large'
+    embedded_data['metadata']['embedding_generated_at'] = end_time.strftime('%Y-%m-%d %H:%M:%S')
+    embedded_data['metadata']['embedding_device'] = embedder.device
+    embedded_data['metadata']['embedding_duration_seconds'] = duration
+    embedded_data['metadata']['embedding_batch_size'] = batch_size
+    embedded_data['metadata']['embedding_max_length'] = embedder.max_length
+    embedded_data['metadata']['embedding_precision'] = 'float16' if embedder.use_amp else 'float32'
+    
+    # Save output
+    output_file = os.path.join(output_dir, 'embedded_conversations.json')
+    print(f"\nSaving to {output_file}...", flush=True)
+    
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(embedded_data, f, indent=2, ensure_ascii=False)
+    
+    print("✓ Done")
+    print("=" * 60)
+    print(f"Model: GTE-Large | Device: {embedder.device}")
+    print(f"Precision: {'FP16' if embedder.use_amp else 'FP32'} | Batch: {batch_size}")
+    print(f"Time: {duration:.1f}s | Output: {output_file}")
+    print(f"Message IDs: Preserved ✓")
+    print("=" * 60)
+    
+    # Count total messages
+    total_messages = 0
+    for month_data in embedded_data.get('by_month', {}).values():
+        for conv_messages in month_data.values():
+            for msg_group in conv_messages:
+                total_messages += len(msg_group)
+    
+    return {
+        'output_file': output_file,
+        'num_messages': total_messages,
+        'duration_seconds': duration
+    }
+
+
+def main():
+    print("=" * 60)
+    print("Embedding Generator (GTE-Large) - OPTIMIZED")
+    print("=" * 60)
+    
+    # Load compressed data
+    input_file = 'compressed_conversations.json'
+    print(f"Loading {input_file}...", flush=True)
+    
+    try:
+        with open(input_file, 'r', encoding='utf-8') as f:
+            compressed_data = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: {input_file} not found!")
+        sys.exit(1)
+    except json.JSONDecodeError as e:
+        print(f"Error: Invalid JSON: {e}")
+        sys.exit(1)
     
     # Verify message IDs are present
     sample_checked = False
@@ -247,11 +350,10 @@ def generate_embeddings(compressed_file: str, output_file: Optional[str] = None,
         embedder = GTELargeGenerator(max_length=512)
     except Exception as e:
         print(f"Error initializing model: {e}")
-        raise
+        sys.exit(1)
     
     # Configure batch size
-    if batch_size is None:
-        batch_size = 256 if torch.cuda.is_available() else 32
+    batch_size = 256 if torch.cuda.is_available() else 32
     
     # Process data
     start_time = datetime.now()
@@ -277,11 +379,7 @@ def generate_embeddings(compressed_file: str, output_file: Optional[str] = None,
     embedded_data['metadata']['embedding_precision'] = 'float16' if embedder.use_amp else 'float32'
     
     # Save output
-    if output_file is None:
-        output_file = compressed_file.replace('compressed_', 'embedded_')
-        if output_file == compressed_file:
-            output_file = 'embedded_conversations.json'
-    
+    output_file = 'embedded_conversations.json'
     print(f"\nSaving to {output_file}...", flush=True)
     
     with open(output_file, 'w', encoding='utf-8') as f:
@@ -294,28 +392,6 @@ def generate_embeddings(compressed_file: str, output_file: Optional[str] = None,
     print(f"Time: {duration:.1f}s | Output: {output_file}")
     print(f"Message IDs: Preserved ✓")
     print("=" * 60)
-    
-    return {
-        'output_file': output_file,
-        'device': embedder.device,
-        'duration': duration,
-        'batch_size': batch_size
-    }
-
-
-def main():
-    """Main entry point for command-line usage."""
-    import sys
-    
-    if len(sys.argv) > 1:
-        compressed_file = sys.argv[1]
-    else:
-        compressed_file = 'compressed_conversations.json'
-    
-    output_file = sys.argv[2] if len(sys.argv) > 2 else None
-    
-    result = generate_embeddings(compressed_file, output_file)
-    print(f"✓ Embeddings saved to {result['output_file']}")
 
 
 if __name__ == '__main__':
