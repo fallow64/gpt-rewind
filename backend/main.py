@@ -45,6 +45,9 @@ async def process_conversation(file: UploadFile = File(...)):
             with open(insight_file_path, "r") as f:
                 insight_data = f.read()
             await transcribe_insight(user_id=random_id, insight=insight_data, page_index=page_index)
+    
+    # Return the conversation ID
+    return {"conversationId": random_id}
 
 
 # get json file
