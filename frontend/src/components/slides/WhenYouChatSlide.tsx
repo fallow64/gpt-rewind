@@ -6,20 +6,11 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
-  Title,
   Tooltip,
-  Legend,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
 const HOUR_LABELS = [
   "12am",
@@ -48,7 +39,6 @@ const HOUR_LABELS = [
   "11pm",
 ];
 
-// Function to determine color based on hour
 const getHourColor = (hour: number) => {
   if (hour >= 0 && hour < 6) return "#6d28d9"; // Night - deep purple
   if (hour >= 6 && hour < 12) return "#a78bfa"; // Morning - light purple
@@ -63,9 +53,11 @@ export default function WhenYouChatSlide() {
     throw error;
   }
 
-  // Data is guaranteed to exist when component renders due to Suspense
-  // Expecting: { hourlyActivity: [hour0, hour1, ..., hour23] } - 24 values
-  const hourlyActivity = data.hourlyActivity || Array(24).fill(0);
+  // Convert data object like {"0": 10, "1": 20, ..., "23": 15} to array
+  const hourlyActivity = Array.from(
+    { length: 24 },
+    (_, i) => data[String(i)] || 0
+  );
 
   const chartData = {
     labels: HOUR_LABELS,
@@ -87,57 +79,33 @@ export default function WhenYouChatSlide() {
     maintainAspectRatio: false,
     animation: false as const,
     plugins: {
-      legend: {
-        display: false,
-      },
-      title: {
-        display: false,
-      },
+      legend: { display: false },
       tooltip: {
         backgroundColor: "rgba(0, 0, 0, 0.8)",
         padding: 10,
-        titleFont: {
-          size: 13,
-          weight: "bold" as const,
-        },
-        bodyFont: {
-          size: 12,
-        },
+        titleFont: { size: 13, weight: "bold" as const },
+        bodyFont: { size: 12 },
         callbacks: {
-          label: function (context: any) {
-            return `${context.parsed.y.toFixed(1)} messages`;
-          },
+          label: (context: any) => `${context.parsed.y.toFixed(1)} messages`,
         },
       },
     },
     scales: {
       x: {
-        grid: {
-          display: false,
-        },
+        grid: { display: false },
         ticks: {
           color: "#1f2937",
-          font: {
-            size: 10,
-            weight: 500 as const,
-          },
+          font: { size: 10, weight: 500 as const },
           maxRotation: 0,
           minRotation: 0,
         },
       },
       y: {
         beginAtZero: true,
-        grid: {
-          color: "rgba(0, 0, 0, 0.05)",
-        },
+        grid: { color: "rgba(0, 0, 0, 0.05)" },
         ticks: {
           color: "#4b5563",
-          font: {
-            size: 11,
-          },
-          callback: function (value: any) {
-            return value;
-          },
+          font: { size: 11 },
         },
       },
     },

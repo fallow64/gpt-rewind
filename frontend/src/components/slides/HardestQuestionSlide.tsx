@@ -10,7 +10,7 @@ export default function HardestQuestionSlide() {
   }
 
   // Data is guaranteed to exist when component renders due to Suspense
-  const hardestQuestion = data.hardestQuestion || "solve complex problem";
+  const hardestQuestion = data;
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center bg-linear-to-br from-purple-950 via-purple-900 to-indigo-950 p-12">

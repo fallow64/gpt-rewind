@@ -5,9 +5,13 @@ import { createPortal } from "react-dom";
 
 interface UploadStepProps {
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  isUploading: boolean;
 }
 
-export default function UploadStep({ onFileUpload }: UploadStepProps) {
+export default function UploadStep({
+  onFileUpload,
+  isUploading,
+}: UploadStepProps) {
   const [showInstructions, setShowInstructions] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -15,10 +19,24 @@ export default function UploadStep({ onFileUpload }: UploadStepProps) {
     setMounted(true);
   }, []);
 
+  if (isUploading) {
+    return (
+      <div className="text-center space-y-6 w-full">
+        <div className="flex items-center justify-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-500"></div>
+        </div>
+        <h2 className="text-3xl font-bold">Processing Your Data...</h2>
+        <p className="text-xl text-white/80">
+          This may take a moment. Please don't close this page.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="text-center space-y-6 w-full">
-        <h2 className="text-3xl font-bold">Step 2: Upload Your Data</h2>
+        <h2 className="text-3xl font-bold">Upload Your Data</h2>
         <p className="text-xl text-white/80">
           Upload your ChatGPT conversation data (JSON format)
         </p>

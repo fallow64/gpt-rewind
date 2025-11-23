@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, ReactNode } from "react";
+import { useSessionStorage } from "usehooks-ts";
 
 interface ConversationContextType {
   conversationId: string | null;
@@ -16,7 +17,10 @@ interface ConversationProviderProps {
 }
 
 export function ConversationProvider({ children }: ConversationProviderProps) {
-  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useSessionStorage<string | null>(
+    "conversationId",
+    null
+  );
 
   return (
     <ConversationContext.Provider value={{ conversationId, setConversationId }}>

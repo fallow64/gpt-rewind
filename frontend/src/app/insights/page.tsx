@@ -60,7 +60,7 @@ export default function InsightsPage() {
     { key: "top-topics", component: YourTopTopicsSlide, slide: 6 },
     { key: "topics-by-month", component: TopicsByMonthSlide, slide: 7 },
     { key: "topics-by-hour", component: TopicsByHourSlide, slide: 8 },
-    { key: "outro", component: OutroSlide, slide: 9 },
+    // { key: "outro", component: OutroSlide, slide: 9 },
   ];
 
   const postcards: ReactNode[] = slides.map(

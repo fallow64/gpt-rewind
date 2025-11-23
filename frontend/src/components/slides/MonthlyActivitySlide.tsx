@@ -1,26 +1,31 @@
 "use client";
 
-import { useMemo } from "react";
 import { useSlide } from "@/src/contexts/SlideDataContext";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
-  Title,
   Tooltip,
-  Legend,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
+
+const MONTH_NAMES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 export default function MonthlyActivitySlide() {
   const { data, error } = useSlide();
@@ -29,114 +34,66 @@ export default function MonthlyActivitySlide() {
     throw error;
   }
 
-  const chartData = useMemo(
-    () => ({
-      datasets: [
-        {
-          label: "Hours per Month",
-          data: data,
-          backgroundColor: "#a78bfa",
-          borderColor: "#8b5cf6",
-          borderWidth: 2,
-          borderRadius: 6,
-          barThickness: 40,
-        },
-      ],
-    }),
-    [data]
-  );
+  // Extract labels and values from data
+  const labels = Object.keys(data).map((dateStr) => {
+    const [, month] = dateStr.split("-");
+    return MONTH_NAMES[parseInt(month) - 1];
+  });
 
-  const options = useMemo(
-    () => ({
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: false as const,
-      plugins: {
-        legend: {
-          display: false,
-        },
-        title: {
-          display: false,
-        },
-        tooltip: {
-          backgroundColor: "rgba(0, 0, 0, 0.8)",
-          padding: 12,
-          titleFont: {
-            size: 14,
-            weight: "bold" as const,
-          },
-          bodyFont: {
-            size: 13,
-          },
-          callbacks: {
-            label: function (context: any) {
-              return `${context.parsed.y.toFixed(1)} hours`;
-            },
-          },
+  const values = Object.values(data);
+
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        label: "Hours per Month",
+        data: values,
+        backgroundColor: "#a78bfa",
+        borderColor: "#8b5cf6",
+        borderWidth: 2,
+        borderRadius: 6,
+        barThickness: 40,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: false as const,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        padding: 12,
+        titleFont: { size: 14, weight: "bold" as const },
+        bodyFont: { size: 13 },
+        callbacks: {
+          label: (context: any) => `${context.parsed.y.toFixed(1)} hours`,
         },
       },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            color: "#1f2937",
-            font: {
-              size: 12,
-              weight: 500,
-            },
-            callback: function (value: any) {
-              return value + "h";
-            },
-          },
-          grid: {
-            color: "rgba(0, 0, 0, 0.05)",
-            lineWidth: 1,
-          },
-          border: {
-            display: false,
-          },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          color: "#1f2937",
+          font: { size: 12, weight: 500 },
+          callback: (value: any) => value + "h",
         },
-        x: {
-          ticks: {
-            color: "#1f2937",
-            font: {
-              size: 13,
-              weight: 600,
-            },
-            callback: function (value: any, index: number) {
-              const label = chartData.datasets[0].data[index]?.x;
-              if (typeof label === "string") {
-                const [, month] = label.split("-");
-                const monthNames = [
-                  "Jan",
-                  "Feb",
-                  "Mar",
-                  "Apr",
-                  "May",
-                  "Jun",
-                  "Jul",
-                  "Aug",
-                  "Sep",
-                  "Oct",
-                  "Nov",
-                  "Dec",
-                ];
-                return monthNames[parseInt(month) - 1];
-              }
-              return label;
-            },
-          },
-          grid: {
-            display: false,
-          },
-          border: {
-            display: false,
-          },
-        },
+        grid: { color: "rgba(0, 0, 0, 0.05)", lineWidth: 1 },
+        border: { display: false },
       },
-    }),
-    []
-  );
+      x: {
+        ticks: {
+          color: "#1f2937",
+          font: { size: 13, weight: 600 },
+        },
+        grid: { display: false },
+        border: { display: false },
+      },
+    },
+  };
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-12 bg-linear-to-br from-purple-950 via-purple-900 to-indigo-950">

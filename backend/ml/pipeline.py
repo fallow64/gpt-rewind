@@ -156,15 +156,19 @@ def extract_insights(compression_result: Dict[str, Any],
     longest_conv = analytics.get('longest_conversation', {})
     
     # Page -1: Introduction / Welcome
-    insights[-1] = {}
+    insights[-1] = {
+        'type': 'intro',
+    }
     
     # Page 0: Total hours
     insights[0] = {
+        'type': 'total_hours',
         'data': yearly.get('total_hours', 0),
     }
     
     # Page 1: Hours by month
     insights[1] = {
+        'type': 'hours_by_month',
         'data': {month: stats.get('total_hours', 0) for month, stats in monthly.items()},
     }
     
@@ -176,11 +180,13 @@ def extract_insights(compression_result: Dict[str, Any],
             hourly_dist[int(hour)] = hourly_dist.get(int(hour), 0) + count
     
     insights[2] = {
+        'type': 'hours_by_hour',
         'data': hourly_dist,
     }
     
     # Page 3: Longest conversation
     insights[3] = {
+        'type': 'longest_conversation',
         'data': longest_conv.get('duration_hours', 0),
     }
     
@@ -188,10 +194,12 @@ def extract_insights(compression_result: Dict[str, Any],
     if analytics_result and analytics_result.get('easiest'):
         easiest = analytics_result['easiest']
         insights[4] = {
+            'type': 'easiest_question',
             'data': easiest.get('text', ''),
         }
     else:
         insights[4] = {
+            'type': 'easiest_question',
             'data': 'Embedding-based analysis was not run'
         }
     
@@ -199,10 +207,12 @@ def extract_insights(compression_result: Dict[str, Any],
     if analytics_result and analytics_result.get('hardest'):
         hardest = analytics_result['hardest']
         insights[5] = {
+            'type': 'hardest_question',
             'data': hardest.get('text', ''),
         }
     else:
         insights[5] = {
+            'type': 'hardest_question',
             'data': 'Analysis not available',
         }
     
@@ -215,34 +225,37 @@ def extract_insights(compression_result: Dict[str, Any],
         
         insights[6] = {
             'type': 'top_topics',
-            'topics': [
-                {
-                    'rank': i + 1,
-                    'description': f"Topic {i + 1}",
-                    'message_count': topic.get('metrics', {}).get('followup_count', 0)
-                }
-                for i, topic in enumerate(sorted_topics)
-            ]
+            'data': [sorted_topics[i].get('text', '') for i in range(len(sorted_topics))],
+            # 'data': [
+            #     {
+            #         'rank': i + 1,
+            #         'description': f"Topic {i + 1}",
+            #         'message_count': topic.get('metrics', {}).get('followup_count', 0)
+            #     }
+            #     for i, topic in enumerate(sorted_topics)
+            # ]
         }
     else:
         insights[6] = {
             'type': 'top_topics',
-            'topics': [],
-            'note': 'Topic analysis not available'
+            'data': ['First', 'Second', 'Third'],
         }
     
     # Page 7: Topics per month (placeholder)
     insights[7] = {
+        'type': 'topics_by_month',
         'data': {},
     }
     
     # Page 8: Topics per hour (placeholder)
     insights[8] = {
+        'type': 'topics_by_hour',
         'data': {},
     }
     
     # Page 9: Outro
     insights[9] = {
+        'type': 'outro',
         'data': {
             'total_hours': yearly.get('total_hours', 0),
             'total_messages': yearly.get('total_messages', 0)
