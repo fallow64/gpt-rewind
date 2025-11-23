@@ -7,14 +7,14 @@ from pydantic import BaseModel
 app = FastAPI()
 
 
-@app.get("/user/{userID}/insights")
+@app.post("/user/{userID}/insights")
 
 
 
-@app.get("/user/{userID}/sound/{index}")
+@app.post("/user/{userID}/sound/{index}")
 
 
-@app.post("/user/{userID}/conversation")
+@app.get("/user/{userID}/conversation")
 
 
 
