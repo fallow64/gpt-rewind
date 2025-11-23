@@ -36,11 +36,9 @@ export default function HardestQuestionSlide() {
 
         {/* Fun commentary */}
         <div className="space-y-4">
-          <p className="text-xl text-white/80 italic">
-            Now that's a challenge! 🚀
-          </p>
           <p className="text-lg text-white/70">
-            You're pushing boundaries and asking the tough questions.
+            You're pushing boundaries and asking the tough questions. Keep it
+            up! 🚀
           </p>
         </div>
       </div>

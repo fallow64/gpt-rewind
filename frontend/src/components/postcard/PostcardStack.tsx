@@ -28,6 +28,8 @@ export default function PostcardStack({
             zIndex: index,
             width: `${width}px`,
             height: `${height}px`,
+            boxShadow:
+              "0 0 30px rgba(0, 0, 0, 0.2), 0 25px 50px -12px rgba(0, 0, 0, 0.5)",
           }}
         />
       ))}

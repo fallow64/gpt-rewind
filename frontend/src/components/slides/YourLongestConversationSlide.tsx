@@ -34,31 +34,6 @@ export default function YourLongestConversationSlide() {
             </div>
           </div>
         </div>
-
-        {/* Fun fact */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-          <p className="text-xl text-white/95 leading-relaxed">
-            {longestConversationHours >= 5 ? (
-              <>
-                That's like binge-watching{" "}
-                <span className="font-bold">
-                  {Math.floor(longestConversationHours / 2.5)}
-                </span>{" "}
-                movies back-to-back!
-              </>
-            ) : longestConversationHours >= 2 ? (
-              <>
-                That's longer than most meetings! You were really deep in
-                thought.
-              </>
-            ) : (
-              <>Short but meaningful conversations can be the most impactful!</>
-            )}
-          </p>
-        </div>
-
-        {/* Icon decoration */}
-        <div className="text-7xl opacity-80">💬</div>
       </div>
     </div>
   );
