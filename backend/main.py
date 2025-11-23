@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import sqlite3
 from generate_audio import transcribe
+from text_generator import generate_text
 
 app = FastAPI()
 
@@ -13,8 +14,12 @@ app = FastAPI()
 # get json file
 # run albert's data stripping and tokenization
 @app.get("/data/{randomId}/insights/{pageIndex}")
-
-
+async def makeText(randomId, pageIndex):
+    # change insight into text
+    # transcribe audio message 
+    # return the text   
+    
+    
 
 @app.get("/data/{randomId}/sounds/{pageIndex}")
 async def getSoundFile(randomId: str, pageIndex: int):
