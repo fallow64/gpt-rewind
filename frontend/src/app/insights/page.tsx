@@ -8,7 +8,6 @@ import EasiestQuestionSlide from "@/src/components/slides/EasiestQuestionSlide";
 import HardestQuestionSlide from "@/src/components/slides/HardestQuestionSlide";
 import IntroSlide from "@/src/components/slides/IntroSlide";
 import MonthlyActivitySlide from "@/src/components/slides/MonthlyActivitySlide";
-import OutroSlide from "@/src/components/slides/OutroSlide";
 import TopicsByHourSlide from "@/src/components/slides/TopicsByHourSlide";
 import TopicsByMonthSlide from "@/src/components/slides/TopicsByMonthSlide";
 import WhenYouChatSlide from "@/src/components/slides/WhenYouChatSlide";

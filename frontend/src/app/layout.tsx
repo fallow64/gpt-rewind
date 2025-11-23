@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import "./globals.css";
 import Header from "../components/layout/Header";
 import { ConversationProvider } from "../contexts/ConversationContext";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Create Next App",

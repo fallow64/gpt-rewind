@@ -1,18 +1,16 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useConversation } from "@/src/contexts/ConversationContext";
 import UploadStep from "@/src/components/UploadStep";
+import { useConversation } from "@/src/contexts/ConversationContext";
+import { useRouter } from "next/navigation";
+import { ChangeEvent, useState } from "react";
 
 export default function Home() {
   const router = useRouter();
   const { setConversationId } = useConversation();
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleFileUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -66,7 +64,7 @@ export default function Home() {
         <div className="text-center space-y-4">
           <h1 className="text-6xl font-bold">Welcome to GPT Rewind</h1>
           <p className="text-2xl text-white/80">
-            Discover your ChatGPT conversation insights
+            Take a second to look back at your year of ChatGPT usage
           </p>
         </div>
 
