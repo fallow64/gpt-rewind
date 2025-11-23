@@ -7,55 +7,72 @@ import AnimatedPostcardStack from "@/src/components/postcard/AnimatedPostcardSta
 import NextButton from "@/src/components/layout/NextButton";
 import BackButton from "@/src/components/layout/BackButton";
 import { POSTCARD_CONFIG, DEFAULT_BACKGROUND_CARDS } from "../../types";
-import TopicsPerHourSlide from "@/src/components/slides/TopicsPerHourSlide";
-import TopTopicsThisYearSlide from "@/src/components/slides/TopTopicsThisYearSlide";
+import IntroSlide from "@/src/components/slides/IntroSlide";
 import PostcardStack from "@/src/components/postcard/PostcardStack";
-
-const postcardData: ReactNode[] = [
-  <TopTopicsThisYearSlide key="top-topics" />,
-  <TopicsPerHourSlide key="topics-per-hour" />,
-
-  <div key="topics-over-time" className="w-full h-full space-y-6 bg-red-300">
-    <h2 className="text-4xl font-bold text-gray-900">Your topics over time</h2>
-    <div className="text-gray-800">
-      <p className="text-xl mb-4">Your interests have evolved significantly!</p>
-      <ul className="list-disc list-inside text-left space-y-2 text-lg">
-        <li>2022: Travel and Adventure</li>
-        <li>2023: Technology and AI</li>
-        <li>2024: Personal Development</li>
-        <li>insert chart here</li>
-      </ul>
-    </div>
-  </div>,
-];
+import { useData } from "@/src/contexts/DataContext";
 
 export default function InsightsPage() {
   const { data: session, status } = useSession();
+  const { uploadedData } = useData();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      redirect("/");
-    }
-  }, [status]);
 
   const handleNext = () => {
     if (isAnimating) return;
     setIsAnimating(true);
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % postcardData.length);
+      setCurrentIndex((prev) => (prev + 1) % postcardDataWithIntro.length);
       setIsAnimating(false);
     }, POSTCARD_CONFIG.animationDuration);
   };
+
+  const postcardDataWithIntro: ReactNode[] = [
+    <IntroSlide key="intro" onContinue={handleNext} />,
+
+    <div key="topics-over-time" className="w-full h-full space-y-6 bg-red-300">
+      <h2 className="text-4xl font-bold text-gray-900">
+        Your topics over time
+      </h2>
+      <div className="text-gray-800">
+        <p className="text-xl mb-4">
+          Your interests have evolved significantly!
+        </p>
+        <ul className="list-disc list-inside text-left space-y-2 text-lg">
+          <li>2022: Travel and Adventure</li>
+          <li>2023: Technology and AI</li>
+          <li>2024: Personal Development</li>
+          <li>insert chart here</li>
+        </ul>
+      </div>
+    </div>,
+  ];
+
+  // Redirect if not authenticated or no data uploaded
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      redirect("/");
+    }
+    // Optional: uncomment to require data upload before viewing insights
+    // if (status === "authenticated" && !uploadedData) {
+    //   redirect("/");
+    // }
+  }, [status, uploadedData]);
+
+  // Log uploaded data for debugging
+  useEffect(() => {
+    if (uploadedData) {
+      console.log("Uploaded data available:", uploadedData);
+    }
+  }, [uploadedData]);
 
   const handleBack = () => {
     if (isAnimating) return;
     setIsAnimating(true);
     setTimeout(() => {
       setCurrentIndex(
-        (prev) => (prev - 1 + postcardData.length) % postcardData.length
+        (prev) =>
+          (prev - 1 + postcardDataWithIntro.length) %
+          postcardDataWithIntro.length
       );
       setIsAnimating(false);
     }, POSTCARD_CONFIG.animationDuration);
@@ -114,7 +131,7 @@ export default function InsightsPage() {
 
         {/* Animated postcard stack with current and next */}
         <AnimatedPostcardStack
-          postcards={postcardData}
+          postcards={postcardDataWithIntro}
           currentIndex={currentIndex}
           isAnimating={isAnimating}
           width={1280}

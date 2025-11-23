@@ -6,41 +6,8 @@ import Image from "next/image";
 function AuthSection() {
   const { data: session, status } = useSession();
 
-  // Show buttons while loading to prevent flash
-  if (status === "loading") {
-    return (
-      <div className="flex gap-2 opacity-50 pointer-events-none">
-        <button
-          disabled
-          className="px-4 py-2 text-sm bg-white text-gray-900 font-semibold rounded-lg flex items-center gap-2"
-        >
-          <Image
-            src="/google-icon.svg"
-            alt="Google"
-            width={16}
-            height={16}
-            className="w-4 h-4"
-          />
-          Google
-        </button>
-        <button
-          disabled
-          className="px-4 py-2 text-sm bg-[#5865F2] text-white font-semibold rounded-lg flex items-center gap-2"
-        >
-          <Image
-            src="/discord-icon.svg"
-            alt="Discord"
-            width={16}
-            height={16}
-            className="w-4 h-4"
-          />
-          Discord
-        </button>
-      </div>
-    );
-  }
-
   if (session) {
+    // if user logged in
     return (
       <div className="flex items-center gap-4">
         <div className="text-sm text-right">
@@ -57,10 +24,18 @@ function AuthSection() {
     );
   }
 
+  // Show buttons while loading to prevent flash, disable interaction
+  const isLoading = status === "loading";
+
   return (
-    <div className="flex gap-2">
+    <div
+      className={`flex gap-2 ${
+        isLoading ? "opacity-50 pointer-events-none" : ""
+      }`}
+    >
       <button
-        onClick={() => signIn("google")}
+        onClick={() => !isLoading && signIn("google")}
+        disabled={isLoading}
         className="px-4 py-2 text-sm bg-white hover:bg-gray-100 text-gray-900 font-semibold rounded-lg transition-colors flex items-center gap-2"
       >
         <Image
@@ -73,7 +48,8 @@ function AuthSection() {
         Google
       </button>
       <button
-        onClick={() => signIn("discord")}
+        onClick={() => !isLoading && signIn("discord")}
+        disabled={isLoading}
         className="px-4 py-2 text-sm bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold rounded-lg transition-colors flex items-center gap-2"
       >
         <Image

@@ -10,10 +10,12 @@ import UploadStep from "@/src/components/workflow/UploadStep";
 import ProcessStep from "@/src/components/workflow/ProcessStep";
 import ProcessingState from "@/src/components/workflow/ProcessingState";
 import LoadingState from "@/src/components/workflow/LoadingState";
+import { useData } from "@/src/contexts/DataContext";
 
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { setUploadedData } = useData();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -39,6 +41,9 @@ export default function Home() {
       // Read file content
       const fileContent = await uploadedFile.text();
       const jsonData = JSON.parse(fileContent);
+
+      // Store data in context for use across the app
+      setUploadedData(jsonData);
 
       // Generic POST API call - easy to edit
       const response = await fetch("/api/process-data", {
