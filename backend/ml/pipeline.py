@@ -244,13 +244,52 @@ def extract_insights(compression_result: Dict[str, Any],
     # Page 7: Topics per month (placeholder)
     insights[7] = {
         'type': 'topics_by_month',
-        'data': {},
+        'data': {
+            '2024-11': 'Topic A',
+            '2024-12': 'Topic B',
+            '2025-01': 'Topic C',
+            '2025-02': 'Topic D',
+            '2025-03': 'Topic E',
+            '2025-04': 'Topic F',
+            '2025-05': 'Topic G',
+            '2025-06': 'Topic H',
+            '2025-07': 'Topic I',
+            '2025-08': 'Topic J',
+            '2025-09': 'Topic K',
+            '2025-10': 'Topic L',
+            '2025-11': 'Topic M',
+        },
     }
     
     # Page 8: Topics per hour (placeholder)
     insights[8] = {
         'type': 'topics_by_hour',
-        'data': {},
+        'data': {
+            0: 'Topic X',
+            1: 'Topic Y',
+            2: 'Topic Z',
+            3: 'Topic AA',
+            4: 'Topic AB',
+            5: 'Topic AC',
+            6: 'Topic AD',
+            7: 'Topic AE',
+            8: 'Topic AF',
+            9: 'Topic AG',
+            10: 'Topic AH',
+            11: 'Topic AI',
+            12: 'Topic AJ',
+            13: 'Topic AK',
+            14: 'Topic AL',
+            15: 'Topic AM',
+            16: 'Topic AN',
+            17: 'Topic AO',
+            18: 'Topic AP',
+            19: 'Topic AQ',
+            20: 'Topic AR',
+            21: 'Topic AS',
+            22: 'Topic AT',
+            23: 'Topic AU',
+        },
     }
     
     # Page 9: Outro

@@ -17,10 +17,23 @@ import YourTopTopicsSlide from "@/src/components/slides/YourTopTopicsSlide";
 import { SlideDataProvider } from "@/src/contexts/SlideDataContext";
 import { ReactNode, Suspense, useEffect, useState } from "react";
 import { DEFAULT_BACKGROUND_CARDS, POSTCARD_CONFIG } from "../../types";
+import OutroSlide from "@/src/components/slides/OutroSlide";
 
 const LoadingSlide = () => (
-  <div className="w-full h-full flex items-center justify-center bg-white">
-    <div className="text-gray-900 text-2xl">Loading...</div>
+  <div className="w-full h-full flex flex-col items-center justify-center p-12 bg-linear-to-br from-purple-950 via-purple-900 to-indigo-950">
+    <div className="text-center space-y-8">
+      <div className="flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-300"></div>
+      </div>
+      <div className="space-y-4">
+        <h2 className="text-5xl font-bold text-white">
+          Preparing Your Insights...
+        </h2>
+        <p className="text-xl text-purple-200">
+          Analyzing your conversations and crunching the numbers
+        </p>
+      </div>
+    </div>
   </div>
 );
 
@@ -59,7 +72,7 @@ export default function InsightsPage() {
     { key: "top-topics", component: YourTopTopicsSlide, slide: 6 },
     { key: "topics-by-month", component: TopicsByMonthSlide, slide: 7 },
     { key: "topics-by-hour", component: TopicsByHourSlide, slide: 8 },
-    // { key: "outro", component: OutroSlide, slide: 9 },
+    { key: "outro", component: OutroSlide, slide: 9 },
   ];
 
   const postcards: ReactNode[] = slides.map(

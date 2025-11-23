@@ -2,63 +2,43 @@
 
 import { useSlide } from "@/src/contexts/SlideDataContext";
 
-const HOURS = [
-  "12am",
-  "1am",
-  "2am",
-  "3am",
-  "4am",
-  "5am",
-  "6am",
-  "7am",
-  "8am",
-  "9am",
-  "10am",
-  "11am",
-  "12pm",
-  "1pm",
-  "2pm",
-  "3pm",
-  "4pm",
-  "5pm",
-  "6pm",
-  "7pm",
-  "8pm",
-  "9pm",
-  "10pm",
-  "11pm",
-];
-
 const TIME_PERIODS = [
   {
+    name: "Night",
     start: 0,
     end: 6,
-    label: "Late Night",
-    color: "from-indigo-900/40 to-purple-900/40",
-    borderColor: "border-indigo-500/30",
+    color: "from-indigo-900/40 to-indigo-800/40",
+    emoji: "🌙",
   },
   {
+    name: "Morning",
     start: 6,
     end: 12,
-    label: "Morning",
-    color: "from-amber-900/40 to-yellow-900/40",
-    borderColor: "border-amber-500/30",
+    color: "from-orange-900/40 to-yellow-800/40",
+    emoji: "🌅",
   },
   {
+    name: "Afternoon",
     start: 12,
     end: 18,
-    label: "Afternoon",
-    color: "from-orange-900/40 to-red-900/40",
-    borderColor: "border-orange-500/30",
+    color: "from-blue-900/40 to-blue-800/40",
+    emoji: "☀️",
   },
   {
+    name: "Evening",
     start: 18,
     end: 24,
-    label: "Evening",
-    color: "from-purple-900/40 to-indigo-900/40",
-    borderColor: "border-purple-500/30",
+    color: "from-purple-900/40 to-purple-800/40",
+    emoji: "🌆",
   },
 ];
+
+const formatHour = (hour: number): string => {
+  if (hour === 0) return "12am";
+  if (hour < 12) return `${hour}am`;
+  if (hour === 12) return "12pm";
+  return `${hour - 12}pm`;
+};
 
 export default function TopicsByHourSlide() {
   const { data, error } = useSlide();
@@ -67,17 +47,25 @@ export default function TopicsByHourSlide() {
     throw error;
   }
 
-  // Data is guaranteed to exist when component renders due to Suspense
-  // Expecting: { hourlyTopics: ["Topic", "Topic", ...] } - 24 topics, one per hour
-  const hourlyTopics = data.hourlyTopics || Array(24).fill("General");
+  // Data format: Record<number, string> where key is 0-23 (hour) and value is topic
+  const hourlyData: Record<number, string> = data;
 
-  const getTimePeriod = (hour: number) => {
-    return (
-      TIME_PERIODS.find(
-        (period) => hour >= period.start && hour < period.end
-      ) || TIME_PERIODS[0]
-    );
-  };
+  // Group hours by time period
+  const periodGroups = TIME_PERIODS.map((period) => {
+    const hours = Array.from(
+      { length: period.end - period.start },
+      (_, i) => period.start + i
+    ).filter((hour) => hourlyData[hour]); // Only include hours with data
+
+    return {
+      ...period,
+      hours: hours.map((hour) => ({
+        hour,
+        label: formatHour(hour),
+        topic: hourlyData[hour] || "No data",
+      })),
+    };
+  }).filter((period) => period.hours.length > 0); // Only show periods with data
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-12 bg-linear-to-br from-purple-950 via-purple-900 to-indigo-950">
@@ -91,33 +79,65 @@ export default function TopicsByHourSlide() {
           </p>
         </div>
 
-        <div className="bg-purple-900/30 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-purple-700/30">
-          {/* Hour-by-hour grid */}
-          <div className="grid grid-cols-2 gap-3 max-h-[500px] overflow-y-auto">
-            {HOURS.map((hour, idx) => {
-              const period = getTimePeriod(idx);
-              return (
-                <div
-                  key={hour}
-                  className={`flex items-center gap-4 py-2 px-4 bg-linear-to-r ${period.color} rounded-lg border ${period.borderColor} hover:scale-[1.02] transition-transform`}
-                >
-                  <div className="text-purple-200 font-semibold text-sm min-w-[50px]">
-                    {hour}
-                  </div>
-                  <div className="flex-1 h-px bg-purple-500/20"></div>
-                  <div className="text-white text-sm font-medium text-right">
-                    {hourlyTopics[idx]}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+          {periodGroups.map((period) => (
+            <div
+              key={period.name}
+              className="bg-purple-900/30 backdrop-blur-sm rounded-2xl p-4 shadow-sm border border-purple-700/30"
+            >
+              {/* Period Header */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">{period.emoji}</span>
+                <h3 className="text-xl font-bold text-white">{period.name}</h3>
+                <span className="text-purple-300 text-sm">
+                  ({period.hours.length}{" "}
+                  {period.hours.length === 1 ? "hour" : "hours"})
+                </span>
+              </div>
 
-        <div className="text-center">
-          <p className="text-sm text-purple-200">
-            Your conversation topics follow your daily rhythm
-          </p>
+              {/* Hours Grid */}
+              <div className="grid grid-cols-2 gap-2 gap-x-4">
+                {/* Left Column - First half */}
+                <div className="space-y-2">
+                  {period.hours
+                    .slice(0, Math.ceil(period.hours.length / 2))
+                    .map(({ hour, label, topic }) => (
+                      <div
+                        key={hour}
+                        className={`flex items-center gap-3 py-2 px-3 bg-linear-to-r ${period.color} rounded-lg hover:scale-[1.02] transition-transform`}
+                      >
+                        <div className="text-purple-200 font-semibold text-xs min-w-[45px]">
+                          {label}
+                        </div>
+                        <div className="flex-1 h-px bg-purple-500/20"></div>
+                        <div className="text-white text-sm font-medium text-right flex-1">
+                          {topic}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+                {/* Right Column - Second half */}
+                <div className="space-y-2">
+                  {period.hours
+                    .slice(Math.ceil(period.hours.length / 2))
+                    .map(({ hour, label, topic }) => (
+                      <div
+                        key={hour}
+                        className={`flex items-center gap-3 py-2 px-3 bg-linear-to-r ${period.color} rounded-lg hover:scale-[1.02] transition-transform`}
+                      >
+                        <div className="text-purple-200 font-semibold text-xs min-w-[45px]">
+                          {label}
+                        </div>
+                        <div className="flex-1 h-px bg-purple-500/20"></div>
+                        <div className="text-white text-sm font-medium text-right flex-1">
+                          {topic}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

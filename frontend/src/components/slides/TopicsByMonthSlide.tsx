@@ -1,21 +1,7 @@
 "use client";
 
 import { useSlide } from "@/src/contexts/SlideDataContext";
-
-const MONTH_LABELS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
+import { MONTH_NAMES } from "@/src/types";
 
 export default function TopicsByMonthSlide() {
   const { data, error } = useSlide();
@@ -24,9 +10,14 @@ export default function TopicsByMonthSlide() {
     throw error;
   }
 
-  // Data is guaranteed to exist when component renders due to Suspense
-  // Expecting: { monthlyTopics: ["Topic A", "Topic B", ...] } - 12 topics, one per month
-  const monthlyTopics = data.monthlyTopics || Array(12).fill("General");
+  const rawData = data as Record<string, string>;
+  const arrayData: { month: number; topic: string }[] = Object.entries(rawData)
+    .sort()
+    .splice(0, 12)
+    .map(([monthStr, topic]) => ({
+      month: parseInt(monthStr.split("-")[1], 10),
+      topic,
+    }));
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-12 bg-linear-to-br from-purple-950 via-purple-900 to-indigo-950">
@@ -43,30 +34,19 @@ export default function TopicsByMonthSlide() {
         <div className="bg-purple-900/30 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-purple-700/30">
           {/* 6x2 Grid layout */}
           <div className="grid grid-cols-6 gap-4">
-            {MONTH_LABELS.map((month, idx) => (
-              <div
-                key={month}
-                className="flex flex-col items-center gap-3 py-4 px-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
-              >
-                <div className="text-purple-300 font-semibold text-sm">
-                  {month}
+            {arrayData.map((arrayElement, i) => (
+              <div key={i}>
+                <div className="text-purple-300 text-sm mb-1">
+                  {MONTH_NAMES[arrayElement.month - 1]}
                 </div>
-                <div className="text-white text-base font-medium text-center">
-                  {monthlyTopics[idx]}
+                <div className="bg-white/10 backdrop-blur-sm border-2 border-white/20 rounded-2xl px-4 py-6 h-20 flex items-center justify-center">
+                  <p className="text-md font-medium text-white text-center leading-tight">
+                    {arrayElement.topic}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="text-center">
-          <p className="text-lg text-purple-200">
-            Your conversations shifted focus{" "}
-            <span className="font-semibold text-white">
-              {new Set(monthlyTopics).size}
-            </span>{" "}
-            {new Set(monthlyTopics).size === 1 ? "time" : "times"} this year
-          </p>
         </div>
       </div>
     </div>

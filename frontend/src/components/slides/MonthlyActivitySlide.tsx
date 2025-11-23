@@ -1,6 +1,7 @@
 "use client";
 
 import { useSlide } from "@/src/contexts/SlideDataContext";
+import { MONTH_NAMES } from "@/src/types";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,21 +12,6 @@ import {
 import { Bar } from "react-chartjs-2";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
-
-const MONTH_NAMES = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
 
 export default function MonthlyActivitySlide() {
   const { data, error } = useSlide();

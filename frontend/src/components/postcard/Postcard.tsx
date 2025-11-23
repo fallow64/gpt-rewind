@@ -16,8 +16,6 @@ export default function Postcard({
         zIndex: zIndex,
         width: `${width}px`,
         height: `${height}px`,
-        // boxShadow:
-        //   "0 0 30px rgba(0, 0, 0, 0.2), 0 25px 50px -12px rgba(0, 0, 0, 0.5)",
       }}
     >
       {/* Content area */}
@@ -34,15 +32,6 @@ export default function Postcard({
       <div className="absolute top-0 right-0 w-10 h-10 overflow-hidden">
         <div className="absolute top-0 right-0 w-14 h-14 bg-linear-to-br from-gray-700 to-gray-900 rotate-45 translate-x-7 -translate-y-7 shadow-inner opacity-50"></div>
       </div>
-
-      {/* Stamp decoration */}
-      {/* <Image
-        src="icon.svg"
-        alt="Stamp"
-        width={80}
-        height={80}
-        className="absolute top-4 left-4 w-16 h-16 object-cover fill-green-600"
-      /> */}
     </div>
   );
 }

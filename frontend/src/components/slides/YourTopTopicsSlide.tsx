@@ -42,7 +42,7 @@ export default function YourTopTopicsSlide() {
           <div className="flex flex-col items-center space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
             <div className="relative flex items-center justify-center">
               <div className="absolute w-16 h-16 -top-3">
-                <div className="w-full h-full bg-linear-to-br from-yellow-300 to-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50"></div>
+                <div className="w-full h-full bg-linear-to-br from-yellow-300 to-yellow-500 rounded-full animate-crown-pulse"></div>
               </div>
               <div className="text-5xl font-black text-transparent bg-linear-to-r from-yellow-200 via-yellow-300 to-yellow-400 bg-clip-text relative z-10">
                 1

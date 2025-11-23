@@ -40,3 +40,20 @@ body {
 .animate-swoop-out {
   animation: swoop-out 0.6s ease-in-out forwards;
 }
+
+@keyframes crown-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.4;
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.5);
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.3;
+    box-shadow: 0 0 40px rgba(250, 204, 21, 0.8), 0 0 60px rgba(250, 204, 21, 0.4);
+  }
+}
+
+.animate-crown-pulse {
+  animation: crown-pulse 2s ease-in-out infinite;
+}
