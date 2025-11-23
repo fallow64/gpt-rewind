@@ -9,6 +9,7 @@ Successfully integrated your teammate's v2 code from the analytics branch into y
 ### 1. Updated Files from Remote
 
 Copied the following files from `origin/analytics:v2/` to `backend/ml/`:
+
 - `conversation_compression.py`
 - `embeddings.py`
 - `question_analytics.py`
@@ -20,16 +21,19 @@ Copied the following files from `origin/analytics:v2/` to `backend/ml/`:
 Added wrapper functions to make the v2 scripts compatible with your existing `pipeline.py`:
 
 #### `conversation_compression.py`
+
 - Added `process_conversations(input_file, output_dir)` function
 - Returns dict with file paths and analytics data
 - Handles the full compression workflow internally
 
 #### `embeddings.py`
+
 - Added `generate_embeddings(input_file, output_dir)` function
 - Takes `conversations_with_msg_id.json` as input
 - Returns dict with output file path and metadata
 
 #### `question_analytics.py`
+
 - Added `analyze_questions(embedded_file, output_dir, similarity_threshold, num_workers)` function
 - Takes `embedded_conversations.json` as input
 - **Fixed bug**: Returns `extremes_data.get('hardest')` and `extremes_data.get('easiest')` which include the 'text' field
@@ -38,6 +42,7 @@ Added wrapper functions to make the v2 scripts compatible with your existing `pi
 ### 3. Key Differences from Previous Version
 
 The v2 code:
+
 - Uses `conversations_with_msg_id.json` instead of `compressed_conversations.json` for embeddings
 - Has a different internal structure but same external API
 - Processes messages differently (flattened by month)
@@ -62,7 +67,7 @@ return {
 ✅ All three modules can be imported successfully  
 ✅ Wrapper functions follow the same API as before  
 ✅ `pipeline.py` imports work without modification  
-✅ Bug fix for empty question text applied  
+✅ Bug fix for empty question text applied
 
 ## Testing
 

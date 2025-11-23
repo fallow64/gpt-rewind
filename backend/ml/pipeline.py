@@ -222,14 +222,13 @@ def extract_insights(compression_result: Dict[str, Any],
         # Sort by followup count (number of back-and-forth exchanges)
         sorted_topics = sorted(all_topics, key=lambda x: x.get('metrics', {}).get('followup_count', 0), reverse=True)[:3]
         
-        # Get the actual question text for each top topic
+        # Create descriptions for the top topics
         top_topics_data = []
         for topic in sorted_topics:
-            # Try to get the question text from the topic
-            question_id = topic.get('question_id', '')
-            topic_desc = f"Topic {topic.get('topic_id', '?')} (Score: {topic.get('difficulty_score', 0):.1f})"
-            if question_id:
-                topic_desc = f"{topic.get('conv_id', 'Unknown')[:8]}... - {topic.get('metrics', {}).get('followup_count', 0)} exchanges"
+            followup_count = topic.get('metrics', {}).get('followup_count', 0)
+            difficulty = topic.get('difficulty_score', 0)
+            conv_id = topic.get('conv_id', 'Unknown')[:8]
+            topic_desc = f"{conv_id}... - Difficulty {difficulty:.0f}, {followup_count} exchanges"
             top_topics_data.append(topic_desc)
         
         insights[6] = {
@@ -299,9 +298,9 @@ def extract_insights(compression_result: Dict[str, Any],
             if hour in topics_by_hour and topics_by_hour[hour]:
                 topics = topics_by_hour[hour]
                 avg_diff = sum(t.get('difficulty_score', 0) for t in topics) / len(topics)
-                avg_difficulty_by_hour[hour] = f"Avg difficulty: {avg_diff:.1f} ({len(topics)} topics)"
+                avg_difficulty_by_hour[str(hour)] = f"Avg difficulty: {avg_diff:.1f} ({len(topics)} topics)"
             else:
-                avg_difficulty_by_hour[hour] = "No topics"
+                avg_difficulty_by_hour[str(hour)] = "No topics"
         
         insights[8] = {
             'type': 'topics_by_hour',
@@ -310,7 +309,7 @@ def extract_insights(compression_result: Dict[str, Any],
     else:
         insights[8] = {
             'type': 'topics_by_hour',
-            'data': {hour: 'Analysis not run' for hour in range(24)},
+            'data': {str(hour): 'Analysis not run' for hour in range(24)},
         }
     
     # Page 9: Outro
