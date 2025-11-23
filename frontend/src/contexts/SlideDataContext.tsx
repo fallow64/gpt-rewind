@@ -1,6 +1,8 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode, use } from "react";
+import { useConversation } from "./ConversationContext";
+import { redirect } from "next/navigation";
 
 interface SlideDataContextType {
   data: any;
@@ -18,30 +20,40 @@ interface SlideDataProviderProps {
 }
 
 // Create a cache for promises to enable Suspense
-const promiseCache = new Map<number, Promise<any>>();
+const promiseCache = new Map<string, Promise<any>>();
 
-function fetchSlideData(slide: number): Promise<any> {
-  if (promiseCache.has(slide)) {
-    return promiseCache.get(slide)!;
+function fetchSlideData(conversationId: string, slide: number): Promise<any> {
+  const cacheKey = `${conversationId}-${slide}`;
+
+  if (promiseCache.has(cacheKey)) {
+    return promiseCache.get(cacheKey)!;
   }
 
-  const promise = fetch(`/api/slide-data?pageIndex=${slide}`).then(
-    async (response) => {
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch slide data: ${response.statusText}. Index: ${slide}`
-        );
-      }
-      return response.json();
+  const promise = fetch(
+    `http://localhost:8000/data/${conversationId}/insights/${slide}`
+  ).then(async (response) => {
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch slide data: ${response.statusText}. Index: ${slide}`
+      );
     }
-  );
+    return response.json();
+  });
 
-  promiseCache.set(slide, promise);
+  promiseCache.set(cacheKey, promise);
   return promise;
 }
 
 export function SlideDataProvider({ slide, children }: SlideDataProviderProps) {
-  const [dataPromise] = useState(() => fetchSlideData(slide));
+  const { conversationId } = useConversation();
+
+  if (!conversationId) {
+    console.error("No conversation ID found in SlideDataProvider");
+    alert("No conversation found. Redirecting to home.");
+    redirect("/");
+  }
+
+  const [dataPromise] = useState(() => fetchSlideData(conversationId, slide));
   const [error, setError] = useState<Error | null>(null);
 
   // Use React's use() hook to unwrap the promise - this integrates with Suspense
@@ -59,7 +71,8 @@ export function SlideDataProvider({ slide, children }: SlideDataProviderProps) {
   }
 
   const refetch = () => {
-    promiseCache.delete(slide);
+    const cacheKey = `${conversationId}-${slide}`;
+    promiseCache.delete(cacheKey);
     window.location.reload(); // Simple refetch for now
   };
 

@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useConversation } from "@/src/contexts/ConversationContext";
 import ProgressIndicator from "@/src/components/workflow/ProgressIndicator";
 import StepLabels from "@/src/components/workflow/StepLabels";
 import SignInStep from "@/src/components/workflow/SignInStep";
@@ -14,6 +15,7 @@ import LoadingState from "@/src/components/workflow/LoadingState";
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { setConversationId } = useConversation();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -36,28 +38,29 @@ export default function Home() {
     setIsProcessing(true);
 
     try {
-      // Read file content
-      const fileContent = await uploadedFile.text();
-      const jsonData = JSON.parse(fileContent);
+      // Create FormData to upload the file
+      const formData = new FormData();
+      formData.append("file", uploadedFile);
 
-      // Generic POST API call - send data to server for processing
-      const response = await fetch("/api/process-data", {
+      // Upload to backend
+      const response = await fetch("http://localhost:8000/conversation", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: session?.user?.id,
-          data: jsonData,
-        }),
+        body: formData,
       });
 
       if (!response.ok) {
-        throw new Error("Failed to process data");
+        throw new Error("Failed to upload conversation data");
       }
 
       const result = await response.json();
-      console.log("Processing result:", result);
+      const conversationId = result.conversationId;
+
+      if (!conversationId) {
+        throw new Error("No conversation ID returned from server");
+      }
+
+      // Store conversation ID in context
+      setConversationId(conversationId);
 
       // Redirect to insights
       router.push("/insights");
