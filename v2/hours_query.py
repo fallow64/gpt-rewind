@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
-Monthly Topic Discovery (Final Verified)
+Hourly Topic Discovery (Hour of Day Analysis)
 Phase 1 (Parallel CPU): HDBSCAN Clustering + YAKE Candidate Generation
 Phase 2 (Sequential GPU): GTE-Large Candidate Embedding + Label Selection
+
+Analyzes top topics for each hour of the day (0-23) across the entire year.
 
 Author: Topic Discovery Pipeline
 Date: 2025-11-23
@@ -130,7 +132,7 @@ def extract_phrases_yake(text: str) -> List[str]:
         return []
 
 def extract_candidates_cpu(
-    month: str,
+    hour: int,
     raw_embeddings: np.ndarray,
     msg_ids: List[str],
     msg_map: Dict[str, str],
@@ -191,7 +193,7 @@ def extract_candidates_cpu(
         })
         
     return {
-        'month': month,
+        'hour': hour,
         'clusters': clusters_data,
         'stats': {
             'total': len(msg_ids),
@@ -204,21 +206,21 @@ def extract_candidates_cpu(
 # ============================================================================
 
 def resolve_labels_gpu(
-    month_results: List[Dict[str, Any]], 
+    hourly_results: List[Dict[str, Any]], 
     encoder: GTELargeEncoder
 ) -> List[Dict[str, Any]]:
     """
     Iterate through pre-computed clusters, embed candidates, and find best label.
     """
-    print(f"\nResolving labels for {len(month_results)} months using GPU...")
+    print(f"\nResolving labels for {len(hourly_results)} hours using GPU...")
     
     final_output = []
     
-    for m_data in month_results:
-        month = m_data['month']
-        clusters = m_data['clusters']
+    for h_data in hourly_results:
+        hour = h_data['hour']
+        clusters = h_data['clusters']
         
-        print(f"  Processing {month} ({len(clusters)} clusters)...")
+        print(f"  Processing hour {hour:02d}:00 ({len(clusters)} clusters)...")
         
         for cluster in clusters:
             candidates = cluster['candidates']
@@ -236,93 +238,138 @@ def resolve_labels_gpu(
             
             del cluster['centroid']
             
-        final_output.append(m_data)
+        final_output.append(h_data)
         
     return final_output
 
 # ============================================================================
-# Data Loading
+# Data Loading and Transformation
 # ============================================================================
 
-def load_data(embed_file: str, raw_file: str):
+def extract_hour_from_timestamp(timestamp_str: str) -> int:
     """
-    Loads and aligns data. 
-    Strictly checks that messages have both embeddings AND content.
+    Extract hour of day from ISO timestamp.
+    Returns: 0-23 representing hour of day
+    """
+    try:
+        dt = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+        return dt.hour
+    except:
+        return -1  # Invalid timestamp
+
+def load_and_transform_to_hourly(embed_file: str, raw_file: str):
+    """
+    Loads monthly embeddings and transforms them to hourly grouping.
+    Deletes monthly data from memory after transformation.
     """
     print("Loading data...")
-    # FIX: Added encoding='utf-8' to both open() calls
     with open(embed_file, 'r', encoding='utf-8') as f:
         embed_data = json.load(f)
     with open(raw_file, 'r', encoding='utf-8') as f:
         raw_data = json.load(f)
         
-    # 1. Flatten raw messages
-    print("  Mapping raw content...")
+    # 1. Build message map and timestamp map
+    print("  Mapping raw content and timestamps...")
     msg_map = {}
+    msg_timestamps = {}
+    
     for m_list in raw_data.get('by_month', {}).values():
         for msg in m_list:
-            if msg.get('id') and msg.get('content'):
-                msg_map[msg['id']] = msg['content']
+            msg_id = msg.get('id')
+            if msg_id and msg.get('content'):
+                msg_map[msg_id] = msg['content']
+                if msg.get('timestamp'):
+                    msg_timestamps[msg_id] = msg['timestamp']
+    
+    # Delete raw_data to free memory
+    del raw_data
+    print(f"  Mapped {len(msg_map)} messages with content")
                 
-    # 2. Extract aligned embeddings
-    print("  Aligning embeddings...")
-    monthly_inputs = {}
-    total_loaded = 0
+    # 2. Transform embeddings from monthly to hourly grouping
+    print("  Transforming monthly to hourly grouping...")
+    hourly_data = defaultdict(lambda: {'embeddings': [], 'msg_ids': []})
+    total_processed = 0
+    skipped_no_timestamp = 0
     
     for month, convs in embed_data.get('by_month', {}).items():
-        e_list, id_list = [], []
         for _, msg_groups in convs.items():
             for group in msg_groups:
                 for msg in group:
                     msg_id = msg.get('id')
                     embeds = msg.get('embeddings')
                     
-                    # CRITICAL CHECK: ensure we have text for this embedding
-                    if msg_id and embeds and (msg_id in msg_map):
-                        e_list.append(embeds[0])
-                        id_list.append(msg_id)
-                        total_loaded += 1
-        
-        if e_list:
-            monthly_inputs[month] = (np.array(e_list, dtype=np.float32), id_list)
-            
-    print(f"  Aligned {total_loaded} messages across {len(monthly_inputs)} months.")
-    return monthly_inputs, msg_map
+                    # Check if we have all required data
+                    if msg_id and embeds and (msg_id in msg_map) and (msg_id in msg_timestamps):
+                        hour = extract_hour_from_timestamp(msg_timestamps[msg_id])
+                        
+                        if hour >= 0:  # Valid hour
+                            hourly_data[hour]['embeddings'].append(embeds[0])
+                            hourly_data[hour]['msg_ids'].append(msg_id)
+                            total_processed += 1
+                        else:
+                            skipped_no_timestamp += 1
+                    elif msg_id and embeds and (msg_id in msg_map):
+                        skipped_no_timestamp += 1
+    
+    # Delete embed_data to free memory
+    del embed_data
+    print(f"  Transformed {total_processed} messages into {len(hourly_data)} hours")
+    print(f"  Skipped {skipped_no_timestamp} messages without valid timestamps")
+    
+    # 3. Convert to final format
+    hourly_inputs = {}
+    for hour in range(24):  # Ensure all 24 hours are represented
+        if hour in hourly_data and hourly_data[hour]['embeddings']:
+            embeddings = np.array(hourly_data[hour]['embeddings'], dtype=np.float32)
+            msg_ids = hourly_data[hour]['msg_ids']
+            hourly_inputs[hour] = (embeddings, msg_ids)
+            print(f"    Hour {hour:02d}:00 - {len(msg_ids)} messages")
+        else:
+            print(f"    Hour {hour:02d}:00 - 0 messages (skipped)")
+    
+    # Delete hourly_data to free memory
+    del hourly_data
+    
+    return hourly_inputs, msg_map
 
-def aggregate_yearly_topics(monthly_results: List[Dict[str, Any]], top_k: int = 3) -> Dict[str, Any]:
+def aggregate_hourly_topics(hourly_results: List[Dict[str, Any]], top_k: int = 3) -> Dict[str, Any]:
     """
-    Aggregate cluster labels by year to identify top yearly topics.
+    Aggregate cluster labels by hour to identify top topics for each hour of day.
     Weighted by cluster size.
     """
-    yearly_labels = defaultdict(list)
+    hourly_labels = defaultdict(list)
     
-    # Collect all cluster labels by year
-    for month_result in monthly_results:
-        month = month_result['month']
-        year = month.split('-')[0]  # Extract year from "YYYY-MM"
+    # Collect all cluster labels by hour
+    for hour_result in hourly_results:
+        hour = hour_result['hour']
         
-        for cluster in month_result.get('clusters', []):
+        for cluster in hour_result.get('clusters', []):
             label = cluster.get('label', 'unknown')
             size = cluster.get('size', 0)
-            yearly_labels[year].append((label, size))
+            hourly_labels[hour].append((label, size))
     
-    # Aggregate and rank topics by year
-    yearly_topics = {}
-    for year, labels in sorted(yearly_labels.items()):
-        # Count label frequencies weighted by cluster size
-        label_weights = defaultdict(int)
-        for label, size in labels:
-            label_weights[label] += size
+    # Aggregate and rank topics by hour
+    hourly_topics = {}
+    for hour in range(24):
+        if hour in hourly_labels:
+            labels = hourly_labels[hour]
+            
+            # Count label frequencies weighted by cluster size
+            label_weights = defaultdict(int)
+            for label, size in labels:
+                label_weights[label] += size
+            
+            # Get top K topics
+            top_topics = sorted(label_weights.items(), key=lambda x: x[1], reverse=True)[:top_k]
+            
+            hourly_topics[f"{hour:02d}:00"] = [
+                {'topic': label, 'total_messages': weight}
+                for label, weight in top_topics
+            ]
+        else:
+            hourly_topics[f"{hour:02d}:00"] = []
         
-        # Get top K topics
-        top_topics = sorted(label_weights.items(), key=lambda x: x[1], reverse=True)[:top_k]
-        
-        yearly_topics[year] = [
-            {'topic': label, 'total_messages': weight}
-            for label, weight in top_topics
-        ]
-        
-    return yearly_topics
+    return hourly_topics
 
 # ============================================================================
 # Main
@@ -331,46 +378,64 @@ def aggregate_yearly_topics(monthly_results: List[Dict[str, Any]], top_k: int = 
 def main():
     EMBED_FILE = 'embedded_conversations.json'
     RAW_FILE = 'conversations_with_msg_id.json'
-    OUT_FILE = 'monthly_topics.json'
+    OUT_FILE = 'hourly_topics.json'
     
-    # 1. Load Data
-    monthly_inputs, msg_map = load_data(EMBED_FILE, RAW_FILE)
+    # 1. Load and Transform Data (monthly -> hourly)
+    hourly_inputs, msg_map = load_and_transform_to_hourly(EMBED_FILE, RAW_FILE)
+    
+    if not hourly_inputs:
+        print("\nERROR: No hourly data to process. Check if timestamps exist in your data.")
+        return
     
     # 2. Phase 1: CPU Parallel
     print(f"\nPhase 1: Generating candidates (Parallel CPU, n_jobs={N_JOBS})...")
     start_cpu = datetime.now()
     
     cpu_results = Parallel(n_jobs=N_JOBS)(
-        delayed(extract_candidates_cpu)(month, embs, ids, msg_map, TOP_K_CLUSTERS)
-        for month, (embs, ids) in sorted(monthly_inputs.items())
+        delayed(extract_candidates_cpu)(hour, embs, ids, msg_map, TOP_K_CLUSTERS)
+        for hour, (embs, ids) in sorted(hourly_inputs.items())
     )
     
     print(f"Phase 1 complete in {(datetime.now() - start_cpu).total_seconds():.1f}s")
+    
+    # Delete msg_map to free memory
+    del msg_map
     
     # 3. Phase 2: GPU Sequential
     print("\nPhase 2: Initializing GTE-Large...")
     encoder = GTELargeEncoder()
     
-    monthly_results = resolve_labels_gpu(cpu_results, encoder)
+    hourly_results = resolve_labels_gpu(cpu_results, encoder)
 
-    # 4. Aggregation: Yearly Top 3
-    print("\nAggregating Yearly Topics...")
-    yearly_topics = aggregate_yearly_topics(monthly_results, top_k=3)
+    # 4. Aggregation: Hourly Top Topics
+    print("\nAggregating Hourly Topics...")
+    hourly_topics = aggregate_hourly_topics(hourly_results, top_k=3)
     
     # Print summary to console
-    for year, topics in sorted(yearly_topics.items()):
-        print(f"\n📅 {year} Top Topics:")
-        for i, t in enumerate(topics, 1):
-            print(f"   {i}. {t['topic']} ({t['total_messages']} msgs)")
+    print("\n" + "="*60)
+    print("TOP TOPICS BY HOUR OF DAY")
+    print("="*60)
+    for hour_str, topics in sorted(hourly_topics.items()):
+        print(f"\n⏰ {hour_str}")
+        if topics:
+            for i, t in enumerate(topics, 1):
+                print(f"   {i}. {t['topic']} ({t['total_messages']} msgs)")
+        else:
+            print("   (No data)")
     
     # 5. Save
     print(f"\nSaving to {OUT_FILE}...")
     with open(OUT_FILE, 'w', encoding='utf-8') as f:
         json.dump({
-            'metadata': {'generated_at': str(datetime.now())},
-            'yearly_summary': yearly_topics,
-            'monthly_details': monthly_results
+            'metadata': {
+                'generated_at': str(datetime.now()),
+                'description': 'Top topics for each hour of the day (0-23) across entire year'
+            },
+            'hourly_summary': hourly_topics,
+            'hourly_details': hourly_results
         }, f, indent=2, ensure_ascii=False)
+    
+    print("\n✅ Hourly topic discovery complete!")
 
 if __name__ == '__main__':
     main()
