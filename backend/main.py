@@ -10,8 +10,11 @@ app = FastAPI()
 
 
 @app.post("/conversation")
+# get json file
+# run albert's data stripping and tokenization
+@app.get("/data/{randomId}/insights/{pageIndex}")
 
-@app.get("/data/{randomId}/insights")
+
 
 @app.get("/data/{randomId}/sounds/{pageIndex}")
 async def getSoundFile(randomId: str, pageIndex: int):
