@@ -44,6 +44,67 @@ export async function GET(req: NextRequest) {
         };
         break;
 
+      case 3:
+        // Time of day slide
+        slideData = {
+          timeOfDayHours: [8.5, 32.0, 45.5, 41.5], // [night, morning, afternoon, evening] Replace with actual calculation
+        };
+        break;
+      case 4:
+        // Longest conversation slide
+        slideData = {
+          longestConversationHours: 5.75,
+        };
+        break;
+
+      case 5:
+        // Easiest question slide
+        slideData = {
+          easiestQuestion: "write python", // Replace with actual simplest question
+        };
+        break;
+
+      case 6:
+        // Hardest question slide
+        slideData = {
+          hardestQuestion: "optimize distributed system architecture", // Replace with actual hardest question
+        };
+        break;
+
+      case 7:
+        // Estimated profession slide
+        slideData = {
+          estimatedProfession: "Software Engineer", // Replace with actual estimation
+        };
+        break;
+
+      case 8:
+        // Top topics slide
+        slideData = {
+          topTopics: ["Machine Learning", "Web Development", "Data Structures"], // Replace with actual top 3 topics
+        };
+        break;
+
+      case 9:
+        // Topics by month slide
+        slideData = {
+          monthlyTopics: [
+            "Python Basics",
+            "Web Development",
+            "Web Development",
+            "Machine Learning",
+            "Machine Learning",
+            "Data Science",
+            "APIs",
+            "APIs",
+            "Cloud Computing",
+            "DevOps",
+            "DevOps",
+            "System Design",
+          ], // Replace with actual monthly topics
+        };
+        break;
+
       default:
         return NextResponse.json(
           { error: `No data available for pageIndex ${pageIndexNum}` },

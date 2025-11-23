@@ -6,20 +6,24 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
+  PointElement,
+  LineElement,
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from "chart.js";
-import { Bar } from "react-chartjs-2";
+import { Line } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
+  PointElement,
+  LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
 const MONTH_LABELS = [
@@ -37,7 +41,7 @@ const MONTH_LABELS = [
   "Dec",
 ];
 
-export default function MonthlyHoursSlide() {
+export default function TopicsByMonthSlide() {
   const { data, error } = useSlide();
 
   if (error) {
@@ -45,24 +49,23 @@ export default function MonthlyHoursSlide() {
   }
 
   // Data is guaranteed to exist when component renders due to Suspense
-  const monthlyHours = data.monthlyHours || Array(12).fill(0);
+  // Expecting: { monthlyTopics: ["Topic A", "Topic B", ...] } - 12 topics, one per month
+  const monthlyTopics = data.monthlyTopics || Array(12).fill("General");
 
   const chartData = useMemo(
     () => ({
       labels: MONTH_LABELS,
       datasets: [
         {
-          label: "Hours per Month",
-          data: monthlyHours,
-          backgroundColor: "#a78bfa",
-          borderColor: "#8b5cf6",
-          borderWidth: 2,
-          borderRadius: 6,
-          barThickness: 40,
+          label: "Top Topic",
+          data: MONTH_LABELS.map((_, idx) => idx), // Just for positioning
+          backgroundColor: "transparent",
+          borderColor: "transparent",
+          pointRadius: 0,
         },
       ],
     }),
-    [monthlyHours]
+    []
   );
 
   const options = useMemo(
@@ -78,90 +81,72 @@ export default function MonthlyHoursSlide() {
           display: false,
         },
         tooltip: {
-          backgroundColor: "rgba(0, 0, 0, 0.8)",
-          padding: 12,
-          titleFont: {
-            size: 14,
-            weight: "bold" as const,
-          },
-          bodyFont: {
-            size: 13,
-          },
-          callbacks: {
-            label: function (context: any) {
-              return `${context.parsed.y.toFixed(1)} hours`;
-            },
-          },
+          enabled: false,
         },
       },
       scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            color: "#1f2937",
-            font: {
-              size: 12,
-              weight: 500,
-            },
-            callback: function (value: any) {
-              return value + "h";
-            },
-          },
+        x: {
           grid: {
-            color: "rgba(0, 0, 0, 0.05)",
-            lineWidth: 1,
-          },
-          border: {
             display: false,
           },
-        },
-        x: {
           ticks: {
-            color: "#1f2937",
+            color: "#e9d5ff",
             font: {
               size: 13,
               weight: 600,
             },
           },
-          grid: {
-            display: false,
-          },
           border: {
             display: false,
           },
+        },
+        y: {
+          display: false,
         },
       },
     }),
     []
   );
 
-  const totalHours = monthlyHours.reduce(
-    (sum: number, hours: number) => sum + hours,
-    0
-  );
-
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-12 bg-linear-to-br from-purple-950 via-purple-900 to-indigo-950">
-      <div className="w-full max-w-5xl space-y-8">
+      <div className="w-full max-w-6xl space-y-8">
         <div className="text-center space-y-2">
-          <h2 className="text-5xl font-bold text-white">Monthly Activity</h2>
+          <h2 className="text-5xl font-bold text-white">
+            Your Topics Over Time
+          </h2>
           <p className="text-xl text-purple-200">
-            Your GPT usage throughout the year
+            How your interests evolved throughout the year
           </p>
         </div>
 
         <div className="bg-purple-900/30 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-purple-700/30">
-          <div className="h-[400px]">
-            <Bar data={chartData} options={options} />
+          {/* Custom topic display */}
+          <div className="space-y-4">
+            {MONTH_LABELS.map((month, idx) => (
+              <div
+                key={month}
+                className="flex items-center gap-6 py-3 px-4 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <div className="text-purple-300 font-semibold text-lg min-w-[60px]">
+                  {month}
+                </div>
+                <div className="flex-1 h-px bg-purple-500/30"></div>
+                <div className="text-white text-lg font-medium">
+                  {monthlyTopics[idx]}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
         <div className="text-center">
           <p className="text-lg text-purple-200">
+            Your conversations shifted focus{" "}
             <span className="font-semibold text-white">
-              {totalHours.toFixed(1)} hours
+              {new Set(monthlyTopics).size}
             </span>{" "}
-            total this year
+            {new Set(monthlyTopics).size === 1 ? "time" : "times"} this year
           </p>
         </div>
       </div>

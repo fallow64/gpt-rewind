@@ -5,6 +5,7 @@ interface AnimatedPostcardStackProps {
   postcards: ReactNode[];
   currentIndex: number;
   isAnimating: boolean;
+  direction: "forward" | "backward";
   width: number;
   height: number;
   baseZIndex: number;
@@ -14,18 +15,23 @@ export default function AnimatedPostcardStack({
   postcards,
   currentIndex,
   isAnimating,
+  direction,
   width,
   height,
   baseZIndex,
 }: AnimatedPostcardStackProps) {
-  const nextIndex = (currentIndex + 1) % postcards.length;
+  // Show next card when going forward, previous card when going backward
+  const adjacentIndex =
+    direction === "forward"
+      ? (currentIndex + 1) % postcards.length
+      : (currentIndex - 1 + postcards.length) % postcards.length;
 
   return (
     <>
-      {/* Next postcard (second in stack) */}
+      {/* Adjacent postcard (second in stack) - next or previous based on direction */}
       <AnimatedPostcard
-        key={`next-${nextIndex}`}
-        content={postcards[nextIndex]}
+        key={`adjacent-${adjacentIndex}`}
+        content={postcards[adjacentIndex]}
         width={width}
         height={height}
         zIndex={baseZIndex}

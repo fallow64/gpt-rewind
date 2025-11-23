@@ -13,7 +13,7 @@ export default function YearlyHoursSlide() {
   const totalHours = data.totalHours || 0;
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center p-12 bg-linear-to-br from-blue-600 via-cyan-600 to-teal-600">
+    <div className="w-full h-full flex flex-col items-center justify-center p-12 bg-linear-to-br from-purple-950 via-purple-900 to-indigo-950">
       <div className="text-center space-y-8">
         <h2 className="text-6xl font-bold text-white mb-8">
           Time Spent with GPT

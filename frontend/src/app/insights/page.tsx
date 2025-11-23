@@ -9,6 +9,13 @@ import { POSTCARD_CONFIG, DEFAULT_BACKGROUND_CARDS } from "../../types";
 import IntroSlide from "@/src/components/slides/IntroSlide";
 import YearlyHoursSlide from "@/src/components/slides/YearlyHoursSlide";
 import MonthlyHoursSlide from "@/src/components/slides/MonthlyHoursSlide";
+import TimeOfDaySlide from "@/src/components/slides/TimeOfDaySlide";
+import LongestConversationSlide from "@/src/components/slides/LongestConversationSlide";
+import EasiestQuestionSlide from "@/src/components/slides/EasiestQuestionSlide";
+import HardestQuestionSlide from "@/src/components/slides/HardestQuestionSlide";
+import EstimatedProfessionSlide from "@/src/components/slides/EstimatedProfessionSlide";
+import TopTopicsSlide from "@/src/components/slides/TopTopicsSlide";
+import TopicsByMonthSlide from "@/src/components/slides/TopicsByMonthSlide";
 import PostcardStack from "@/src/components/postcard/PostcardStack";
 import NextButton from "@/src/components/layout/NextButton";
 import { SlideDataProvider } from "@/src/contexts/SlideDataContext";
@@ -23,9 +30,11 @@ export default function InsightsPage() {
   const { data: session, status } = useSession();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [direction, setDirection] = useState<"forward" | "backward">("forward");
 
   const handleNext = () => {
     if (isAnimating) return;
+    setDirection("forward");
     setIsAnimating(true);
     setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % postcards.length);
@@ -45,23 +54,41 @@ export default function InsightsPage() {
         <MonthlyHoursSlide />
       </SlideDataProvider>
     </Suspense>,
-
-    <div key="topics-over-time" className="w-full h-full space-y-6">
-      <h2 className="text-4xl font-bold text-gray-900">
-        Your topics over time
-      </h2>
-      <div className="text-gray-800">
-        <p className="text-xl mb-4">
-          Your interests have evolved significantly!
-        </p>
-        <ul className="list-disc list-inside text-left space-y-2 text-lg">
-          <li>2022: Travel and Adventure</li>
-          <li>2023: Technology and AI</li>
-          <li>2024: Personal Development</li>
-          <li>insert chart here</li>
-        </ul>
-      </div>
-    </div>,
+    <Suspense key="time-of-day-suspense" fallback={<LoadingSlide />}>
+      <SlideDataProvider slide={3}>
+        <TimeOfDaySlide />
+      </SlideDataProvider>
+    </Suspense>,
+    <Suspense key="longest-conversation-suspense" fallback={<LoadingSlide />}>
+      <SlideDataProvider slide={4}>
+        <LongestConversationSlide />
+      </SlideDataProvider>
+    </Suspense>,
+    <Suspense key="easiest-question-suspense" fallback={<LoadingSlide />}>
+      <SlideDataProvider slide={5}>
+        <EasiestQuestionSlide />
+      </SlideDataProvider>
+    </Suspense>,
+    <Suspense key="hardest-question-suspense" fallback={<LoadingSlide />}>
+      <SlideDataProvider slide={6}>
+        <HardestQuestionSlide />
+      </SlideDataProvider>
+    </Suspense>,
+    <Suspense key="estimated-profession-suspense" fallback={<LoadingSlide />}>
+      <SlideDataProvider slide={7}>
+        <EstimatedProfessionSlide />
+      </SlideDataProvider>
+    </Suspense>,
+    <Suspense key="top-topics-suspense" fallback={<LoadingSlide />}>
+      <SlideDataProvider slide={8}>
+        <TopTopicsSlide />
+      </SlideDataProvider>
+    </Suspense>,
+    <Suspense key="topics-by-month-suspense" fallback={<LoadingSlide />}>
+      <SlideDataProvider slide={9}>
+        <TopicsByMonthSlide />
+      </SlideDataProvider>
+    </Suspense>,
   ];
 
   // Redirect if not authenticated
@@ -73,6 +100,7 @@ export default function InsightsPage() {
 
   const handleBack = () => {
     if (isAnimating) return;
+    setDirection("backward");
     setIsAnimating(true);
     setTimeout(() => {
       setCurrentIndex(
@@ -138,6 +166,7 @@ export default function InsightsPage() {
           postcards={postcards}
           currentIndex={currentIndex}
           isAnimating={isAnimating}
+          direction={direction}
           width={1280}
           height={720}
           baseZIndex={DEFAULT_BACKGROUND_CARDS.length}
@@ -147,7 +176,9 @@ export default function InsightsPage() {
         {currentIndex !== 0 && (
           <BackButton onClick={handleBack} disabled={isAnimating} />
         )}
-        <NextButton onClick={handleNext} disabled={isAnimating} />
+        {currentIndex < postcards.length - 1 && (
+          <NextButton onClick={handleNext} disabled={isAnimating} />
+        )}
       </main>
     </div>
   );

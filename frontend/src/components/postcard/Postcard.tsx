@@ -1,8 +1,4 @@
-import Image from "next/image";
 import { PostcardProps } from "@/src/types";
-
-const PAPER_LINE_OPACITY = 0.05;
-const PAPER_LINE_COLOR = "255, 255, 255";
 
 export default function Postcard({
   contentHtml,
@@ -34,17 +30,17 @@ export default function Postcard({
 
       {/* Corner fold effect */}
       <div className="absolute top-0 right-0 w-10 h-10 overflow-hidden">
-        <div className="absolute top-0 right-0 w-14 h-14 bg-linear-to-br from-gray-700 to-gray-900 rotate-45 translate-x-7 -translate-y-7 shadow-inner"></div>
+        <div className="absolute top-0 right-0 w-14 h-14 bg-linear-to-br from-gray-700 to-gray-900 rotate-45 translate-x-7 -translate-y-7 shadow-inner opacity-50"></div>
       </div>
 
       {/* Stamp decoration */}
-      <Image
+      {/* <Image
         src="icon.svg"
         alt="Stamp"
         width={80}
         height={80}
         className="absolute top-4 left-4 w-16 h-16 object-cover fill-green-600"
-      />
+      /> */}
     </div>
   );
 }

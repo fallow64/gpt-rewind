@@ -35,7 +35,9 @@ function fetchSlideData(slide: number): Promise<any> {
   const promise = fetch(`/api/slide-data?pageIndex=${slide}`).then(
     async (response) => {
       if (!response.ok) {
-        throw new Error(`Failed to fetch slide data: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch slide data: ${response.statusText}. Index: ${slide}`
+        );
       }
       return response.json();
     }
